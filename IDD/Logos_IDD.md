@@ -15,11 +15,13 @@ The *single state* block is a single unit of operation that can be performed on 
 | Message Type| 1 - Byte| Type of message|
 | Account  | 64-Byte | Account address; It is the public key |
 | Previous | 32-Byte | Previous head block on account; 0 if *open* block|
+| Number of Targets| 1 - Byte| Number of entries in the *Target Address* and *Transaction Amount*|
 | Target Address [0..7] | 32-Byte | Multipurpose Field, up to an array of 8 addresses; <br/>See Table below for additional clarification<br/>Must have the same number of elements as transaction amount |
 | Transaction Amount [0..7]   | 16-Byte | Amount to send, up to an array of 8 elements. <br/>Must have the same number of elements as target address |
 | Transaction Fee | 8 - Byte| Transaction Fee for this transaction|
 | Signature | 32 - Byte | BLS signature |
 | Work      | 8-Byte  |Proof of Work Nonce |
+| Number of additional signatures | 1 - Byte| Number of additional signatures from the delegates |
 
 Depending on the transaction intent, the "target" field is multipurpose:
 
