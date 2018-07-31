@@ -1,0 +1,67 @@
+@startuml
+
+folder "s3://logos-bench/binaries" as bin{
+    folder "binary-version-0" as bin-v0 {
+        [rai_node] as rn0
+    }
+    folder "binary-version-1" as bin-v1 {
+        [rai_node] as rn1
+    }
+}
+folder "s3://logos-bench/configs" {
+    folder "config-version-0" {
+        [bench.json.tmpl] as conf0
+    }
+    folder "config-version-1" {
+        [bench.json.tmpl] as conf1
+    }
+}
+folder "s3://logos-bench/agents" {
+    folder "agent-version-0" {
+        [agent.py] as ag0
+    }
+    folder "agent-version-1" {
+        [agent.py] as ag1
+    }
+}
+folder "s3://logos-bench/ldbs" {
+    folder "ldb-version-0" {
+        [data.ldb] as dl0
+    }
+    folder "ldb-version-1" {
+        [data.ldb] as dl1
+    }
+}
+folder "s3://logos-bench/helpers" {
+    [gen_config.sh] as s3gen
+    [libcrypto.so.1.0.0] as s3lib
+    [prepare_local_files.sh] as s3prep
+}
+
+node "EC2 Instance a \n(showing /home/ubuntu)" as UBa {
+	folder "bench" as bencha {
+		[agent.py] as agent
+		folder "config" as conf {
+			[bench.json.tmpl] as tmpl
+			[bench.json] as json
+			[data.ldb] as dl
+		}
+		[rai_node] as rn
+        [libcrypto.so.1.0.0] as lib
+	}
+	[gen_config.sh] as gen
+    [prepare_local_files.sh] as prep
+}
+
+
+s3gen-u->gen
+s3prep-u->prep
+tmpl-l->json
+
+s3lib-u->lib
+ag1-d->agent
+rn1-d->rn
+conf0-d->tmpl
+dl0-d->dl
+
+@enduml
