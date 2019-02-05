@@ -86,7 +86,7 @@ A primary delegate proposes a pre-prepare message to start a consensus session, 
 | Field Name |Size (Byte) | Description |
 | --- | -------------| ----------------- |
 | Header | 8 | Message header|
-| Primary | 32 | Primary delegate's address |
+| Primary | 1 | Primary delegate's index |
 | Epoch Number  | 4 | Global epoch number |
 | Sequence Number | 4 | Starting from 0 at the beginning of the epoch |
 | Timestamp | 8 | UTC timestamp (millisecond)|
