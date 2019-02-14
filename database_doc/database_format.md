@@ -46,9 +46,9 @@ Note all the sizes are in bytes.
 | previous | 32 | previous block's hash in account (send) chain | 2|
 | sequence_number | 4 | sequence number | 3|
 | request_type | 1 | type of the request | 4 |
-| Count | 2 | Number of transactions, [1-8]| 6 |
-| Transactions[Count] | sizeof(Transaction) * Count | Array of transactions (see below) | 7 |
-| Transaction Fee | 16 | Transaction Fee | 5 |
+| Count | 2 | Number of transactions, [1-8]| 5 |
+| Transactions[Count] | sizeof(Transaction) * Count | Array of transactions (see below) | 6 |
+| Transaction Fee | 16 | Transaction Fee | 7 |
 | Signature | 64 | EdDSA signature | - |
 | BatchHash | 32 | Key (BlockHash) of the post-committed BatchStateBlock containing this StateBlock | - |
 | IndexInBatch | 2 | Index of the StateBlock in the post-committed BatchStateBlock | - |
