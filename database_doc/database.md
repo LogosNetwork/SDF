@@ -1,6 +1,6 @@
 # Database Layout Documentation
 
-This document complements the Logos IDD and specifies the format of data stored by `logos_core` software in LMDB (**L**ightning **M**emory-Mapped **D**ata**b**ase). 
+This document complements the Logos IDD and specifies the format of data stored by `logos_core` software in LMDB (**L**ightning **M**emory-Mapped **D**ata**b**ase).
 
 The native database layout is expected to be fully consistent with the format described below at software release time. This documentation is best understood when read together with Logos IDD.
 
@@ -17,6 +17,9 @@ All individual databases below exist within one MDB environment.
 | micro_block_tip_db | "microblocktip"<br>(key value of 0) | 1 | block_hash | 32 | References micro block tip (only one key) |
 | epoch_db | logos::block_hash | 32 | **Epoch**<br>header<br>(proposer) account<br>epoch_number<br>micro_block_tip<br>delegates, each with<br>(*account*)<br>(*vote*)<br>(*stake*)<br>transaction_fee_pool<br>signature | **1,696**<br>48<br>32<br>4 *+4*<br>32<br>1,536<br>(*32*)<br>(*8*)<br>(*8*)<br>8<br>32 | Maps block hash to epoch|
 | epoch_tip_db | "epochtip"<br>(key value of 0) | 1 | block_hash | 32 | References epoch tip<br>(only one key) |
+| token_reservation_db | token_id (BlockHash) | 32 | **reservation_info**<br>reservation<br>reservation_epoch | **36**<br>32<br>4 | Maps token ID to reservation |
+| token_account_db | token_id (BlockHash) | 32 | **TokenAccount**<br>token_balance<br>token_fee_balance<br>fee_type<br>fee_rate<br>symbol<br>name<br>issuer_info<br>controllers<br>settings | **Variable**<br>2<br>2<br>1<br>2<br>1 - 8<br>1 - 32<br>0 - 512<br>controllers<br> | Maps token ID to token account |
+| token_user_status_db | token_user_id (BlockHash) | 32 | **TokenUserStatus**<br>whitelisted<br>token_fee_balance<br>frozen | TODO | Maps token user ID to token user status |
 | frontiers | | |  | | _Deprecated_ |
 | accounts | | |  | | _Deprecated_ |
 | state_blocks | | | | | _Deprecated_ |
@@ -43,6 +46,6 @@ Notes & pending fixes:
    + state_db: remove timestamp?
    + receive_db: trim down
 
-3. Proposed changes: 
+3. Proposed changes:
    + add `next` field in message header (modified retroactively in DB) to enable doubly-linked list. Actual message sent over the wire obviously doesn't need to contain this field.
    + same for dual account chains
