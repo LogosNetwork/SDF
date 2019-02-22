@@ -194,27 +194,27 @@ Token_ID = Hash(Symbol, Name, Issuer_Address, Primary Delegate Address, Pre-prep
 | AddOrRemove | 1 | If 0, add, else remove |
 | Controller | sizeof Controller | The controller as defined in the Controller table |
 
-####Token_Burn
+#### Token_Burn
 | Field Name |Size (Byte)| Description |
 | --- | -------------| ----------------- |
 | Token_ID | 32 | Unique ID of the token |
 | Amount | 16 | The amount of token to burn |
 
-####Token_Account_Send
+#### Token_Account_Send
 | Field Name |Size (Byte)| Description |
 | --- | -------------| ----------------- |
 | Token_ID | 32 | Unique ID of the token |
 | To | 32 | The account that the token is deposited to |
 | Amount | 16 | The amount of token to send |
 
-####Token_Account_withdraw_Fee
+#### Token_Account_withdraw_Fee
 | Field Name |Size (Byte)| Description |
 | --- | -------------| ----------------- |
 | Token_ID | 32 | Unique ID of the token |
 | To | 32 | The account that the token is deposited to |
 | Amount | 16 | The amount of token to send |
 
-####Token_Single_Send
+#### Token_Single_Send
 | Field Name |Size (Byte)| Description |
 | --- | -------------| ----------------- |
 | Token_ID | 32 | Unique ID of the token |
@@ -222,7 +222,7 @@ Token_ID = Hash(Symbol, Name, Issuer_Address, Primary Delegate Address, Pre-prep
 | Amount | 16 | The amount of token to send |
 | Fee | 16 | The transaction fee in tokens |
 
-####Token_Multi_Send
+#### Token_Multi_Send
 | Field Name |Size (Byte)| Description |
 | --- | -------------| ----------------- |
 | Token_ID | 32 | Unique ID of the token |
@@ -230,7 +230,7 @@ Token_ID = Hash(Symbol, Name, Issuer_Address, Primary Delegate Address, Pre-prep
 | Txn[] | Count * sizeof Token_Send_Txn | An array of transactions Token_Send_Txn, as defined below.
 | Fee | 16 | The transaction fee in tokens |
 
-#####Token_Send_Txn
+#### Token_Send_Txn
 | Field Name |Size (Byte)| Description |
 | --- | -------------| ----------------- |
 | To | 32 | The account that the token is deposited to |
