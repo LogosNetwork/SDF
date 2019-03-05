@@ -41,7 +41,7 @@ Note all the sizes are in bytes.
 ### `state_db`
 
 | Value Item | Size | Description | Hash Sequence |
-| --- | --- | --- | - |
+| --- | --- | --- | --- |
 | account_address | 32 | the account that created this block |  1 |
 | previous | 32 | previous block's hash in account (send) chain | 2|
 | sequence_number | 4 | sequence number | 3|
@@ -57,14 +57,14 @@ Note all the sizes are in bytes.
 #### Transaction
 
 | Field Name |Size (Byte)| Description |Hash Sequence |
-| --- | -------------| ----------------- | - |
+| --- | -------------| ----------------- | --- |
 | Target Address | 32 | Transaction target address | 1 |
 | Amount | 16 | Transaction Amount.| 2 |
 
 ### `receive_db`
 
 | Value Item | Size | Description | Hash Sequence |
-| --- | --- | --- | - |
+| --- | --- | --- | --- |
 | previous | 32 | previous receive's hash in account receive chain | - |
 | send_hash | 32 | the original StateBlock corresponding to this receive | 1 |
 | transaction_index | 2 | index to the transaction array of the StateBlock | 2 |
@@ -78,7 +78,7 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 (Common field size total: 201B)
 
 | Field Name |Size | Description | Hash Sequence |
-| --- | -------------| ----------------- | - | 
+| --- | -------------| ----------------- | --- | 
 | MessagePrequel | 8 | Message header (see below) |  1 |
 | Primary | 1 | Primary delegate's index |  2 |
 | Epoch Number  | 4 | Global epoch number |  3 |
@@ -96,7 +96,7 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 #### Message Prequel
 
 | Field Name |Size | Description | Hash Sequence |
-| --- | -------------| ----------------- | - |
+| --- | -------------| ----------------- | --- |
 | Version | 1 | Logos Core Protocol version|  1 |
 | Message Type| 1 | Type of message| - |
 | Consensus_Type | 1 | BatchStateBlock, MicroBlock, or Epoch | -|
@@ -106,14 +106,14 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 #### Batch State Block
 
 | Field Name |Size| Description | Hash Sequence |
-| --- | -------------| ----------------- | - |
+| --- | -------------| ----------------- | --- |
 | Count  | 2 | The number of Single State Blocks included in this batch block | 1 |
 | Single State Block Hashes[Count] | 32 * Count | hashes of Single State Blocks | 2 |
 
 #### Micro Block
 
 | Field Name |Size | Description | Hash Sequence |
-| --- | -------------| ----------------- | - |
+| --- | -------------| ----------------- | --- |
 | Last Micro Block Flag | 1 | Last Micro block flat | 1
 | Number of Batch Blocks| 4 | Number of batch blocks included in the microblock | 2 |
 | Batch Block Tips [32] | 32*32 | Tip of the batch block chain for each delegate| 3 |
@@ -121,7 +121,7 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 #### Epoch
 
 | Field Name |Size | Description | Hash Sequence |
-| --- | -------------| ----------------- | - |
+| --- | -------------| ----------------- | --- |
 | Microblock tip  | 32 | last micro-block's hash | 1 |
 | Transaction Fee Pool | 16 | Transaction Fee Pool | 2 |
 | Delegate [32] | sizeof(Delegate)*32 | 32 delegates and their election results (see below) | 3 |
@@ -129,7 +129,7 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 #### Delegate
 
 | Field Name |Size | Description |Hash Sequence |
-| --- | -------------| ----------------- | -|
+| --- | -------------| ----------------- | ---|
 | Address | 32 | Account address of the delegate | 1 |
 | Publick Key | 64 | Delegate's BLS public key |2|
 | Vote | 16 | Votes the delegate received |3|
