@@ -8,7 +8,7 @@
 | `state_db` | `block_hash` | 32 | StateBlock | [231-567] _\(183 + [1-8] * 48\)_ | Maps a block hash to a state block |
 | `receive_db` | `block_hash` | 32 | ReceiveBlock | 66 | Maps a block hash to a receive block |
 | `batch_db` | `block_hash` | 32 | Post-Commited BatchStateBlock | [203-48,203] _\(203 + [0-1500] * 32\)_ | Maps a block hash to a Post-committed BatchStateBlock, which contains a list of hashs of StateBlocks |
-| `batch_tips_db` | `delegate_index` | 1 | `block_hash` | 32 | Maps a delegate index to the Key (block_hash) of the most recent Post-Commited BatchStateBlock |
+| `batch_tips_db` | `delegate_index+epoch_number` | 5 | `block_hash` | 32 | Maps a (delegate index, epoch number) combination to the Key (block_hash) of the most recent Post-Commited BatchStateBlock in a given number for a given delegate index |
 | `micro_block_db` | `block_hash` | 32 | Post-Commited MicroBlock | 1,230 | Maps a block hash to a micro block |
 | `micro_block_tip_db` | 0 | 1 | block_hash | 32 | References the Key (block_hash) of the most recent micro block. This database has only 1 row, so the key of this database is always 0. |
 | `epoch_db` | `block_hash` | 32 | Post-Commited Epoch | 4,345 | Maps a block hash to an epoch block | 
@@ -139,7 +139,7 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 
 | Field Name |Size| Description |
 | --- | -------------| ----------------- |
-| tip | 32 | Current tip of the batch block. One per delegate. |
+| tip | 32 | Current tip of the batch block. One per `(delegate_id, epoch_number)` combination (although at most only the current epoch and previous are stored in database). |
 
 ### `micro_block_tip_db`
 
