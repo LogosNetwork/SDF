@@ -39,8 +39,8 @@ If the account type is native, the account include the following addtional infor
 | --- | --- | --- |
 | rep_block | 32 | block where account most recently changed representative | 
 | open_block | 32 | original send block that opened this account | 
-| count | 2 | number of different kinds of tokens |
-| token_entry | 50 | please see the table below |
+| token_count | 2 | number of different kinds of tokens |
+| token_entries | token_count * 50 | Array of token_entries, see the table below |
 
 ##### token_entry
 | Value Item | Size | Description |
