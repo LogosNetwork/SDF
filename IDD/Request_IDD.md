@@ -15,11 +15,8 @@ The Request is a single unit of operation that can be performed on an account. T
 | Signature | 64 | EdDSA signature | - |
 | HasWork  | 1 | If Proof of Work is included |- |
 | Work      | 8 | Proof of Work. It is included in the message if HasWork is true | -|
-| Next      | 32 | Next is the hash of the next Request. It is a database only field | - |
 
-Note that Signature = Sign(Hash)
-
-Note that the "Work" field is not covered by the signature. This field is sent from the client to the TxAcceptor. After verifying it, it is discarded. 
+Note that Signature = Sign(Hash). Also note that the "Work" field is not covered by the signature. This field is sent from the client to the TxAcceptor. After verifying it, it is discarded. So it will not in the database.
 
 #### Request Type
 | Request Type | Code | Description |
