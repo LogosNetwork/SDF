@@ -5,9 +5,10 @@
 | --- | ------------- | ----------------- | --- | --- | --- |
 | `account_db` | `account_address` | 32 | `account_info` | 160 | Maps an account_address to the account information |
 | `reservation_db` | `account_address` | 32 | `reservation_info` | 36 | Maps an account_address to the reservation information |
-| `state_db` | `block_hash` | 32 | StateBlock | [231-567] _\(183 + [1-8] * 48\)_ | Maps a block hash to a state block |
+| `state_db` | `block_hash` | 32 | Request | ToBeUpdated after election,  was [231-567] _\(183 + [1-8] * 48\)_ | Maps a block hash to a request |
 | `receive_db` | `block_hash` | 32 | ReceiveBlock | 66 | Maps a block hash to a receive block |
-| `batch_db` | `block_hash` | 32 | Post-Commited BatchStateBlock | [203-48,203] _\(203 + [0-1500] * 32\)_ | Maps a block hash to a Post-committed BatchStateBlock, which contains a list of hashs of StateBlocks |
+| `token_user_status_db` | `token_user_id` | 32 | TokenUserStatus | 2 | Maps a token_user_id to a  TokenUserStatus|
+| `batch_db` | `block_hash` | 32 | Post-Commited BatchStateBlock | ToBeUpdated after election,  was [203-48,203] _\(203 + [0-1500] * 32\)_ | Maps a block hash to a Post-committed BatchStateBlock, which contains a list of hashs of StateBlocks |
 | `batch_tips_db` | `delegate_index+epoch_number` | 5 | `block_hash` | 32 | Maps a (delegate index, epoch number) combination to the Key (block_hash) of the most recent Post-Commited BatchStateBlock in a given number for a given delegate index |
 | `micro_block_db` | `block_hash` | 32 | Post-Commited MicroBlock | 1,230 | Maps a block hash to a micro block |
 | `micro_block_tip_db` | 0 | 1 | block_hash | 32 | References the Key (block_hash) of the most recent micro block. This database has only 1 row, so the key of this database is always 0. |
@@ -22,14 +23,57 @@ Note all the sizes are in bytes.
 
 | Value Item | Size | Description |
 | --- | --- | --- |
-| (send) head | 32 | tip of account send chain |
-| receive_head | 32 | tip of account receive chain |
-| rep_block | 32 | block where account most recently changed representative (to be implemented) | 
-| open_block | 32 | original send block that opened this account | 
-| balance | 16 | amount of Logos this account currently owns | 
+| type | 1 | native account (0) or token account (1) |
+| balance | 16 | amount of Logos this account currently owns |
 | modified | 8 | seconds elapsed since unix epoch |
+| (send) head | 32 | tip of account send chain |
 | sequence | 4 | number of send transactions this account has created |
+| receive_head | 32 | tip of account receive chain |
 | receive_count | 4 | number of receive transactions this account has received |
+| type depended information |  | see the tables below |
+
+#### native account additional information
+If the account type is native, the account include the following addtional information
+
+| Value Item | Size | Description |
+| --- | --- | --- |
+| rep_block | 32 | block where account most recently changed representative | 
+| open_block | 32 | original send block that opened this account | 
+| count | 2 | number of different kinds of tokens |
+| token_entry | 50 | please see the table below |
+
+##### token_entry
+| Value Item | Size | Description |
+| --- | --- | --- |
+| token_id | 32 | token ID |
+| whitelisted | 1 | if the user account is whitelisted | 
+| frozen | 1 | if the user account is frozen|
+| balance | 16 | balance of this kind of token |
+
+Please refer the Request IDD for token_id computation. 
+
+#### token account additional information
+If the account type is token, the account include the following addtional information
+
+| Value Item | Size | Description |
+| --- | --- | --- |
+| total_supply | 16 | The total amount of token issued | 
+| token_balance | 16 | remaining balance hold by the token account |
+| token_fee_balance | 16 | fees collected, unwithdrawed |
+| Fee_Type | 1 | percentage or absolute | 
+| Fee_Rate | 16 | [0, 100] if Fee_Type is percentage | 
+| Symbol | <=8 | The symbol of the token. |
+| Name | <=32 | The name of the token. |
+| Issuer Info | <= 512 | Optional field for the issuer to put its information.|
+| Controller_Count | 1 | The number of controllers, in [0, 10] | 
+| Controllers[] | Controller_Count * sizeof Controller | An array of controllers. The format of controllers is defined in the Controller table. | 
+| Settings | 8 | A set of settings as shown in the Token Setting table |
+
+##### Controller
+| Field Name |Size (Byte)| Description |
+| --- | -------------| ----------------- |
+| Address | 32 | The account address of the controller |
+| Privilege | 8 | The set of privileges that the controller has, as defined in the Controller Privilege table. |
 
 ### `reservation_db`
 
@@ -42,17 +86,19 @@ Note all the sizes are in bytes.
 
 | Value Item | Size | Description | Hash Sequence |
 | --- | --- | --- | --- |
-| account_address | 32 | the account that created this block |  1 |
-| previous | 32 | previous block's hash in account (send) chain | 2|
-| sequence_number | 4 | sequence number | 3|
-| request_type | 1 | type of the request | 4 |
-| Count | 2 | Number of transactions, [1-8]| 5 |
-| Transactions[Count] | sizeof(Transaction) * Count | Array of transactions (see below) | 6 |
-| Transaction Fee | 16 | Transaction Fee | 7 |
-| Signature | 64 | EdDSA signature | - |
+| Type | 1 | Request type | 1 |
+| Origin  | 32 | Account address | 2 | 
+| Previous | 32 | Previous block hash on account| 3 |
+| Fee | 16 | Transaction Fee | 4 |
+| SQN  | 4 | Sequence Number, the number of sends, increment only | 5 |
 | BatchHash | 32 | Key (BlockHash) of the post-committed BatchStateBlock containing this StateBlock | - |
 | IndexInBatch | 2 | Index of the StateBlock in the post-committed BatchStateBlock | - |
+| Request | depend on the Request Type | Request | 6 |
+| Signature | 64 | EdDSA signature | - |
+| HasWork  | 1 | If Proof of Work is included. Always false for database | - |
+| Next      | 32 | Next is the hash of the next Request. It is a database only field | - |
 
+Please refer the Request IDD for Request details.
 
 #### Transaction
 
@@ -68,6 +114,15 @@ Note all the sizes are in bytes.
 | previous | 32 | previous receive's hash in account receive chain | - |
 | send_hash | 32 | the original StateBlock corresponding to this receive | 1 |
 | transaction_index | 2 | index to the transaction array of the StateBlock | 2 |
+
+### `token_user_status_db`
+| Value Item | Size | Description |
+| --- | --- | --- | 
+| whitelisted | 1 | if the user account is whitelisted | 
+| frozen | 1 | if the user account is frozen|
+
+#### `token_user_id`
+A token_user_id = Hash(token_id, account_address). Please refer the Request IDD for token_id computation. 
 
 ### `batch_db`, `micro_block_db`, and `epoch_db`
 
