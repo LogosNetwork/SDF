@@ -14,6 +14,10 @@
 | `micro_block_tip_db` | 0 | 1 | block_hash | 32 | References the Key (block_hash) of the most recent micro block. This database has only 1 row, so the key of this database is always 0. |
 | `epoch_db` | `block_hash` | 32 | Post-Commited Epoch | 4,345 | Maps a block hash to an epoch block | 
 | `epoch_tip_db` | 0 | 1 | `block_hash` | 32 | References the Key (block_hash) of the most recent epoch block. This database has only 1 row, so the key of this database is always 0. |
+| `representative_db` | `account_address` | 32 | `representative_info` | 131 | Maps an account address of a representative to info about that representative | 
+| `candidacy_db` | `account_address` | 32 | `candidacy_info` | 98 | Maps an account address of a delegate candidate to info about that candidate | 
+| `leading_candidacy_db` | `account_address` | 32 | `candidacy_info` | 98 | The current leaders of the election (top 8) | 
+
 
 Note all the sizes are in bytes.
 
@@ -207,4 +211,37 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 | Field Name |Size| Description |
 | --- | -------------| ----------------- |
 | tip | 32 | Current epoch block's hash tip. Only one in the network. |
+
+
+### `representative_db`
+
+| Value Item | Size | Description |
+| --- | --- | --- |
+| candidacy_action_tip | 32 | hash of most recent post-committed candidacy action request (Announce or Renounce) |
+| representative_action_tip | 32 | hash of most recent post-committed representative action request (StartRepresenting or StopRepresenting) |
+| election_vote_tip | 32 | hash of most recent post-committed election vote |
+| active | 1 | bool flag indicating whether rep is active (can vote) |
+| remove | 1 | bool flag indicating whether this rep will be removed at epoch transition |
+| voted  | 1 | bool flag indicating whether this representative has voted this epoch |
+
+### `candidacy_db`
+
+| Value Item | Size | Description |
+| --- | --- | --- |
+| votes_received_weighted | 32 | Total votes received so far this epoch, already weighted by stake of caster |
+| bls_key | 32 | bls key to be used as delegate to encrypt consensus messages |
+| stake | 32 | amount to stake as a delegate |
+| active | 1 | bool flag indicating whether candidate is active (can receive votes) |
+| remove | 1 | bool flag indicating whether this candidate will be removed at epoch transition |
+
+### `leading_candidacy_db`
+
+| Value Item | Size | Description |
+| --- | --- | --- |
+| votes_received_weighted | 32 | Total votes received so far this epoch, already weighted by stake of caster |
+| bls_key | 32 | bls key to be used as delegate to encrypt consensus messages |
+| stake | 32 | amount to stake as a delegate |
+| active | 1 | bool flag indicating whether candidate is active (can receive votes) |
+| remove | 1 | bool flag indicating whether this candidate will be removed at epoch transition |
+
 
