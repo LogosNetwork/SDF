@@ -232,7 +232,7 @@ Token_ID = Hash(Symbol, Name, Issuer_Address, Issuer's Previous-hash).
 #### Vote
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Account_Address | 32 | Public key of candidate | Yes | 
+| Account | 32 | Account_Address of candidate | Yes | 
 | Num_Votes | 1 | The number of votes for specified account [1-8] | Yes |
 
 Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater than 8
