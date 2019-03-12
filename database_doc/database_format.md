@@ -21,6 +21,8 @@
 
 Note all the sizes are in bytes.
 
+Note whenever a field is a 1 byte bool flag, 0 represents false and 1 represents true
+
 ## Database Details
 
 ### `account_db`
@@ -216,10 +218,11 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 ### `representative_db`
 
 | Value Item | Size | Description |
-| --- | --- | --- |
+| --- | --- | ---|
 | candidacy_action_tip | 32 | hash of most recent post-committed candidacy action request (Announce or Renounce) |
 | representative_action_tip | 32 | hash of most recent post-committed representative action request (StartRepresenting or StopRepresenting) |
 | election_vote_tip | 32 | hash of most recent post-committed election vote |
+| stake | 16 | amount staked as representative |
 | active | 1 | bool flag indicating whether rep is active (can vote) |
 | remove | 1 | bool flag indicating whether this rep will be removed at epoch transition |
 | voted  | 1 | bool flag indicating whether this representative has voted this epoch |
@@ -228,9 +231,9 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 
 | Value Item | Size | Description |
 | --- | --- | --- |
-| votes_received_weighted | 32 | Total votes received so far this epoch, already weighted by stake of caster |
-| bls_key | 32 | bls key to be used as delegate to encrypt consensus messages |
-| stake | 32 | amount to stake as a delegate |
+| votes_received_weighted | 16 | Total votes received so far this epoch, already weighted by stake of caster |
+| bls_key | 64 | bls key to be used as delegate to encrypt consensus messages |
+| stake | 16 | amount to stake as a delegate |
 | active | 1 | bool flag indicating whether candidate is active (can receive votes) |
 | remove | 1 | bool flag indicating whether this candidate will be removed at epoch transition |
 
@@ -238,10 +241,12 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 
 | Value Item | Size | Description |
 | --- | --- | --- |
-| votes_received_weighted | 32 | Total votes received so far this epoch, already weighted by stake of caster |
-| bls_key | 32 | bls key to be used as delegate to encrypt consensus messages |
-| stake | 32 | amount to stake as a delegate |
+| votes_received_weighted | 16 | Total votes received so far this epoch, already weighted by stake of caster |
+| bls_key | 64 | bls key to be used as delegate to encrypt consensus messages |
+| stake | 16 | amount to stake as a delegate |
 | active | 1 | bool flag indicating whether candidate is active (can receive votes) |
 | remove | 1 | bool flag indicating whether this candidate will be removed at epoch transition |
+
+Note, leading_candidacy_db is simply the current top 8 candidates from the candidacy_db. It is continuously kept up to date based on votes cast
 
 

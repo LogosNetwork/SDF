@@ -225,39 +225,41 @@ Token_ID = Hash(Symbol, Name, Issuer_Address, Issuer's Previous-hash).
 #### Election_Vote
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Count | 1 | The number of single transactions | - | 
+| Count | 1 | The number of entries in vote array [1-8] | - | 
 | Vote[] | Count * sizeof Vote | An array of votes | Yes |
-| Epoch_Number | 8 | Epoch number request was issued in | Yes | 
+| Epoch_Number | 4 | Epoch number request was issued in | Yes | 
 
 #### Vote
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Account | 32 | Public key of candidate | Yes | 
-| Num_Votes | 1 | The number of votes for specified account | Yes | 
+| Account_Address | 32 | Public key of candidate | Yes | 
+| Num_Votes | 1 | The number of votes for specified account [1-8] | Yes |
 
-##### Start_Representing
+Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater than 8
+
+#### Start_Representing
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Stake | 32 | Amount of logos to stake as representative | Yes |
-| Epoch_Number | 8 | Epoch number request was issued in | Yes | 
+| Stake | 16 | Amount of logos to stake as representative | Yes |
+| Epoch_Number | 4 | Epoch number request was issued in | Yes | 
 
 #### Stop_Representing
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Epoch_Number | 8 | Epoch number request was issued in | Yes | 
+| Epoch_Number | 4 | Epoch number request was issued in | Yes | 
 
 #### Announce_Candidacy
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Stake | 32 | Amount of logos to stake as delegate (optional, can use existing stake as representative) | Yes |
-| BLS_Key | 32 | BLS key used as a delegate | Yes |
-| Epoch_Number | 8 | Epoch number request was issued in | Yes | 
+| Stake | 16 | Amount of logos to stake as delegate (optional, can use existing stake as representative) | Yes |
+| BLS_Key | 64 | BLS key used as a delegate | Yes |
+| Epoch_Number | 4 | Epoch number request was issued in | Yes | 
 | Identity_Encryption_Key | 32 | Key used to encrypt IP | Yes |
 
 #### Renounce_Candidacy
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Epoch_Number | 8 | Epoch number request was issued in | Yes | 
+| Epoch_Number | 4 | Epoch number request was issued in | Yes | 
 
 
 
