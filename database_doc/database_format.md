@@ -14,7 +14,7 @@
 | `micro_block_tip_db` | 0 | 1 | block_hash | 32 | References the Key (block_hash) of the most recent micro block. This database has only 1 row, so the key of this database is always 0. |
 | `epoch_db` | `block_hash` | 32 | Post-Commited Epoch | 4,345 | Maps a block hash to an epoch block | 
 | `epoch_tip_db` | 0 | 1 | `block_hash` | 32 | References the Key (block_hash) of the most recent epoch block. This database has only 1 row, so the key of this database is always 0. |
-| `representative_db` | `account_address` | 32 | `representative_info` | 131 | Maps an account address of a representative to info about that representative | 
+| `representative_db` | `account_address` | 32 | `representative_info` | 115 | Maps an account address of a representative to info about that representative | 
 | `candidacy_db` | `account_address` | 32 | `candidacy_info` | 98 | Maps an account address of a delegate candidate to info about that candidate | 
 | `leading_candidacy_db` | `account_address` | 32 | `candidacy_info` | 98 | The current leaders of the election (top 8) | 
 
