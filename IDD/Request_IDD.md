@@ -78,6 +78,10 @@ Note that open and receive transactions of accounts are inferred from the send (
 
 Note that tokens always have 3 less decimals than the native Logos. 
 
+##### Token_ID 
+Every token account has a unique identifier that is computed as:
+Token_ID = Hash(Issuer's Previous-hash, Issuer_Address, Symbol||Name), where || means concatenation.
+
 ##### Token Setting
 Every token account has a set of settings stored in a bit array, and each setting also have a mutability setting, as the table below shows.
 
@@ -127,10 +131,6 @@ Every controller has a set of privileges, which is stored in a bit array as show
 | 19 | Withdraw_Fee | If the controller can withdraw tokens from the token account transaction fee pool |
 
 Note that the _mutable settings can not be changed from mutable (True) to immutable (False).
-
-##### Token_ID 
-Once a Token_Issuance request is post-committed, a unique token account identifier hash is computed:
-Token_ID = Hash(Symbol, Name, Issuer_Address, Issuer's Previous-hash).
 
 #### Token_Issuance_Addition
 | Field Name |Size (Byte)| Description | Hash |
