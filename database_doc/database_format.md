@@ -21,6 +21,7 @@
 | `remove_reps_db` | 0 | 1 | `account_address` | 32 | The representatives to remove from representative_db on epoch transition. This db uses duplicate keys |
 
 
+
 Note all the sizes are in bytes.
 
 Note whenever a field is a 1 byte bool flag, 0 represents false and 1 represents true
