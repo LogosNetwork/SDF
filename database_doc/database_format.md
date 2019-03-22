@@ -14,14 +14,19 @@
 | `micro_block_tip_db` | 0 | 1 | block_hash | 32 | References the Key (block_hash) of the most recent micro block. This database has only 1 row, so the key of this database is always 0. |
 | `epoch_db` | `block_hash` | 32 | Post-Commited Epoch | 4,345 | Maps a block hash to an epoch block | 
 | `epoch_tip_db` | 0 | 1 | `block_hash` | 32 | References the Key (block_hash) of the most recent epoch block. This database has only 1 row, so the key of this database is always 0. |
-| `representative_db` | `account_address` | 32 | `representative_info` | 115 | Maps an account address of a representative to info about that representative | 
-| `candidacy_db` | `account_address` | 32 | `candidacy_info` | 98 | Maps an account address of a delegate candidate to info about that candidate | 
-| `leading_candidacy_db` | `account_address` | 32 | `candidacy_info` | 98 | The current leaders of the election (top 8) | 
+| `representative_db` | `account_address` | 32 | `representative_info` | 112 | Maps an account address of a representative to info about that representative | 
+| `candidacy_db` | `account_address` | 32 | `candidacy_info` | 100 | Maps an account address of a delegate candidate to info about that candidate | 
+| `leading_candidacy_db` | `account_address` | 32 | `candidacy_info` | 100 | The current leaders of the election (top 8) | 
+| `remove_candidates_db` | 0 | 1 | `account_address` | 32 | The candidates to remove from candidacy_db on epoch transition. This db uses duplicate keys |
+| `remove_reps_db` | 0 | 1 | `account_address` | 32 | The representatives to remove from representative_db on epoch transition. This db uses duplicate keys |
+
 
 
 Note all the sizes are in bytes.
 
 Note whenever a field is a 1 byte bool flag, 0 represents false and 1 represents true
+
+Note remove_candidates_db and remove_reps_db use duplicate keys: every account address has key 0, but there are many such pairs.
 
 ## Database Details
 
@@ -223,9 +228,6 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 | representative_action_tip | 32 | hash of most recent post-committed representative action request (StartRepresenting or StopRepresenting) |
 | election_vote_tip | 32 | hash of most recent post-committed election vote |
 | stake | 16 | amount staked as representative |
-| active | 1 | bool flag indicating whether rep is active (can vote) |
-| remove | 1 | bool flag indicating whether this rep will be removed at epoch transition |
-| voted  | 1 | bool flag indicating whether this representative has voted this epoch |
 
 ### `candidacy_db`
 
@@ -234,8 +236,7 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 | votes_received_weighted | 16 | Total votes received so far this epoch, already weighted by stake of caster |
 | bls_key | 64 | bls key to be used as delegate to encrypt consensus messages |
 | stake | 16 | amount to stake as a delegate |
-| active | 1 | bool flag indicating whether candidate is active (can receive votes) |
-| remove | 1 | bool flag indicating whether this candidate will be removed at epoch transition |
+| epoch_modified | 4 | which epoch this record was most recently modified | 
 
 ### `leading_candidacy_db`
 
@@ -244,9 +245,17 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 | votes_received_weighted | 16 | Total votes received so far this epoch, already weighted by stake of caster |
 | bls_key | 64 | bls key to be used as delegate to encrypt consensus messages |
 | stake | 16 | amount to stake as a delegate |
-| active | 1 | bool flag indicating whether candidate is active (can receive votes) |
-| remove | 1 | bool flag indicating whether this candidate will be removed at epoch transition |
+| epoch_modified | 4 | which epoch this record was most recently modified | 
+
 
 Note, leading_candidacy_db is simply the current top 8 candidates from the candidacy_db. It is continuously kept up to date based on votes cast
 
+### `remove_candidates_db`
+| Value Item | Size | Description |
+| --- | --- | --- |
+| account_address | 32 | account address of candidate to be removed |
 
+### `remove_reps_db`
+| Value Item | Size | Description |
+| --- | --- | --- |
+| account_address | 32 | account address of representative to be removed |
