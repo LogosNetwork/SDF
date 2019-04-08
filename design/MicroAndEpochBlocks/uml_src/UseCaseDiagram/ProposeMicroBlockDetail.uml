@@ -1,0 +1,47 @@
+@startuml
+'left to right direction
+'skinparam packageStyle rectangle
+actor network
+actor localDB
+
+rectangle MicroBlockConsensus{
+actor EventProposer
+
+rectangle MicroBlockConsensus_Primary {
+  EventProposer -- (Build MicroBlock) : 1
+  localDB -left- (Build MicroBlock) : read
+  
+  (Build MicroBlock) --> (Send Pre-Prepare) : 2 
+  (Send Pre-Prepare) -- network : 3 
+  
+  network -- (Wait for enough Prepare) : 7
+  (Wait for enough Prepare) --> (enough Prepare) : 8
+  (enough Prepare) --> (send Post-Prepare) : 9
+  (send Post-Prepare) -- network : 10
+  
+  network -- (Wait for enough Commit) : 14
+  (Wait for enough Commit) --> (enough Commit) : 15
+  (enough Commit) --> (send Post-Commit) : 16
+  (send Post-Commit) -- network : 19
+  localDB -left- (send Post-Commit) : store
+}
+
+rectangle MicroBlockConsensus_Backup {
+  network -- (Verify MicroBlock) : 4
+  localDB -left- (Verify MicroBlock) : read
+  
+  (Verify MicroBlock) --> (Send Prepare) : 5
+  (Send Prepare) -- network : 6
+  
+  network -- (Verify Post-Prepare) : 11
+  (Verify Post-Prepare) --> (Send Commit) : 12
+  (Send Commit) -- network : 13
+  
+  network -- (Verify Post-Commit) : 20
+  localDB -left- (Verify Post-Commit) : store
+}
+
+
+}
+
+@enduml

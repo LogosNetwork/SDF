@@ -1,0 +1,21 @@
+@startuml
+
+scale 12 as 200 pixels
+Title Delegate Election Timeline
+concise "Timeline" as TL
+
+@0
+TL is announce
+@12
+TL is elect
+@24
+TL is propagate
+@36
+TL is use
+
+@TL
+@24 <-> @26 : {EpochBlock}
+@34 <-> @36 : {Connect}
+
+caption \nEvery epoch is 12 hours.\nA node must announce to be a delegate candidate in an epoch.\nIn the next epoch, all candidates announced previously will be elected.\nThe election results will be included in an EpochBlock which will be created at the beginning of the next epoch.\nThe EpochBlock is propagated in the network in this epoch.\nThe delegate election result in the EpochBlock will be used to identify the delegates of the next epoch before it starts.
+@enduml

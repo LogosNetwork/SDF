@@ -1,0 +1,58 @@
+@startuml
+
+autonumber
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+actor Client
+entity "Primary Delegate" as pd
+collections "Backup Delegates" as bd
+entity "Fallback Primary\n (Acts as backup until primary fails)" as fp
+
+activate Client
+activate pd
+activate bd
+activate fp
+
+note right of fp
+    The Fallback Primary is a regular backup delegate that participates
+    in consensus. After receiving a valid pre-prepare message, backup
+    delegates will start a fallback timers with pseudo-random timeout
+    values. If the primary delegate fails to proceed, the backup delegate
+    who's timer expires first will act as a fallback primary and resume
+    consensus for the primary that failed.
+end note
+
+Client -> pd : Submit transaction request
+pd -> pd : Validate request
+
+pd -> bd : Send signed pre-prepare message
+pd -> fp : Send signed pre-prepare message
+bd -> bd : Validate pre-prepare message
+fp -> fp : Validate pre-prepare message
+bd -> pd : Send signed prepare message
+fp -> pd : Send signed prepare message
+
+pd -> pd : Fails to proceed
+
+deactivate pd
+
+fp -> fp : Fallback timer expires
+fp -> bd : Re-send abandoned prepare message
+bd -> bd : Validate pre-prepare message
+bd -> fp : Send signed prepare message
+
+fp -> fp : Validate prepare messages
+fp -> fp : Aggregate signatures from backups
+
+fp -> bd : Send signed post-prepare message
+bd -> bd : Validate post-prepare message
+bd -> fp : Send signed commit message
+fp -> fp : Validate commit messages
+fp -> fp : Aggregate signatures from backups
+
+fp -> bd : Send signed post-comit message
+fp -> Client : Send signed post-comit message
+
+@enduml

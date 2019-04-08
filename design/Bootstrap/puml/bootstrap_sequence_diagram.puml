@@ -1,0 +1,77 @@
+@startuml
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 20
+
+participant node
+participant bootstrap_initiator
+participant bootstrap_attempt
+control "node::ongoing_bootstrap()" as ob
+collections bootstrap_client
+participant tips_req_client
+participant bulk_pull_client
+participant validator
+participant remote
+
+activate node
+
+node -> bootstrap_initiator : Create bootstrap_initiator
+activate bootstrap_initiator
+
+node ->  ob : Method Call
+note right
+     ongoing_bootstrap() will be called
+     periodically. It's called every 5
+     seconds on startup and every 300
+     seconds thereafter.
+end note
+
+ob -> bootstrap_initiator : Call bootstrap_initiator::bootstrap()
+
+bootstrap_initiator -> bootstrap_attempt : Call bootstrap_attempt::run()
+
+bootstrap_attempt -> bootstrap_attempt : Call populate_connections()
+note left
+     populate_connections() attempts to build a list
+     of remote bootstraping peers from the peer list
+     maintained by the node class. This method also
+     attempts to prune out unresponsive clients.
+end note
+
+bootstrap_attempt -> bootstrap_client : Create Clients
+activate bootstrap_client
+
+bootstrap_attempt -> bootstrap_client : Call bootstrap_client::run()
+
+bootstrap_client -> remote : Connect
+remote -> bootstrap_client : Connect Ack
+
+bootstrap_attempt -> bootstrap_attempt : Call req_tips()
+
+bootstrap_attempt -> tips_req_client : Call tips_req_client::run()
+activate tips_req_client
+tips_req_client -> remote : Send tips_req message
+
+remote -> tips_req_client : receive data and Call tips_req_client::received_tips()
+
+tips_req_client -> bootstrap_attempt : Call bootstrap_attempt::add_pull()
+
+bootstrap_attempt -> bootstrap_attempt : Call bootstrap_attempt::request_pull()
+activate bulk_pull_client
+
+bootstrap_attempt -> bulk_pull_client : Call bulk_pull_client::request()
+bulk_pull_client -> remote : Send bulk_pull message
+
+remote -> bulk_pull_client : Receive Data and Call bulk_pull_client::received_type()
+
+bulk_pull_client -> bulk_pull_client : Call bulk_pull_client:received_block()
+
+bulk_pull_client -> validator : Call Validate/ApplyUpdate for batch state blocks, micro, and epoch blocks
+
+deactivate bootstrap_client
+deactivate bulk_pull_client
+deactivate tips_req_client
+deactivate bootstrap_initiator
+deactivate node
+
+@enduml

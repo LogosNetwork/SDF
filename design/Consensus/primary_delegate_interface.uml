@@ -1,0 +1,12 @@
+# PlantUML Editor
+
+1. select template
+2. write uml diagram
+
+@startuml
+
+class PrimaryDelegate {
+ +OnConsensusMessage()
+ }
+
+@enduml

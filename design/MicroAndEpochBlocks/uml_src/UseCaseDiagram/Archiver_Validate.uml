@@ -1,0 +1,13 @@
+@startuml
+
+actor localDB
+
+actor MicroBlockConsensusManager_validate
+
+rectangle Archiver {
+	MicroBlockConsensusManager_validate -- (Validate MicroBlock)
+	(Validate MicroBlock) --> (MicroBlockHandler::Validate)
+	(MicroBlockHandler::Validate) -- localDB
+}
+
+@enduml

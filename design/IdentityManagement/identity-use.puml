@@ -1,0 +1,9 @@
+@startuml
+
+Node --> (IdentityManagement) : Retrieve Keys
+
+Delegate --> (IdentityManagement) : Advertise address\nRequest address\nhand handshake
+
+TxAcceptor --> (IdentityManagement) : Handshake with delegate
+
+@enduml

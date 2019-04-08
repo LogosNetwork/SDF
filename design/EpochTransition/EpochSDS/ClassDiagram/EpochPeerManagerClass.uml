@@ -1,0 +1,15 @@
+@startuml
+
+interface PeerManager
+interface PeerAcceptorStarter
+
+PeerManager <|-- EpochPeerManager
+PeerAcceptorStarter <|-- EpochPeerManager
+ 
+EpochPeerManager : PeerAcceptor _peer_acceptor
+EpochPeerManager : PeerBinder _peer_binder
+
+EpochPeerManager : Start()
+EpochPeerManager : OnConnectionAccepted()
+
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+
+node->peer: get epoch
+peer->node: send epoch
+node->peer: get micro
+peer->node: send micro
+node->peer: get bsb
+peer->node: send bsb
+
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+
+autonumber
+
+actor Client
+entity "Primary Delegate" as pd
+collections "Backup Delegates" as bd
+entity "Secondary Delegate\n(Arbitrarily Chosen Backup Delegate)" as sd
+
+activate Client
+activate pd
+activate bd
+activate sd
+
+Client -> pd : Submit transaction request
+pd -> pd : Fails to proceed
+
+deactivate pd
+
+Client -> Client : Request timeout expires
+Client -> sd : Re-submit transaction request
+
+sd -> sd : Validate request
+sd -> sd : Add to secondary waiting list
+sd -> sd : Secondary waiting list timeout expires
+
+sd -> bd : Send signed pre-prepare message
+bd -> bd : Validate pre-prepare message
+bd -> sd : Send signed prepare message
+
+sd -> sd : Validate prepare messages
+sd -> sd : Aggregate signatures from backups
+
+sd -> bd : Send signed post-prepare message
+bd -> bd : Validate post-prepare message
+bd -> sd : Send signed commit message
+sd -> sd : Validate commit messages
+sd -> sd : Aggregate signatures from backups
+
+sd -> bd : Send signed post-comit message
+sd -> Client : Send signed post-comit message
+
+@enduml

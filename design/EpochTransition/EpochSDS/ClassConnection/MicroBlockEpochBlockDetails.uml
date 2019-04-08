@@ -1,0 +1,96 @@
+@startuml
+
+package MicroBlock_EpochBlock{
+class Archiver #lightgreen
+
+class MicroBlockHandler #lightgreen
+class EpochHandler #lightgreen
+class EventProposer #lightgreen
+class EpochVotingManager #lightgreen
+
+	package ConsensusFrameworkPlugin{
+	class MicroBlockConsensusManager #lightgreen
+	class EpochConsensusManager #lightgreen
+	class MicroBlockConsensusConnection #lightgreen
+	class EpochConsensusConnection #lightgreen
+	}
+}
+
+package GenericConsensusFramework{
+class ConsensusContainer
+class ConsensusNetIO
+class EpochManager
+class ConsensusNetIOManager
+}
+
+package Database{
+class logos::block_store
+}
+
+package Recall{
+interface IRecallHandler
+}
+
+Archiver "1" *-- "1" MicroBlockHandler
+Archiver "1" *-- "1" EpochHandler
+Archiver "1" *-- "1" EventProposer
+Archiver "1" *-- "1" EpochVotingManager
+
+Archiver -- ConsensusFrameworkPlugin : validate and store
+
+MicroBlockConsensusManager "1" *-- "32" MicroBlockConsensusConnection  
+EpochConsensusManager "1" *-- "32" EpochConsensusConnection  
+
+MicroBlock_EpochBlock -- Database : read from and write to DB
+MicroBlock_EpochBlock -- Recall : recall
+'MicroBlock_EpochBlock -- GenericConsensusFramework : send and receive consensus messages
+
+Archiver -- ConsensusContainer : init consensus
+ConsensusContainer *-- EpochManager
+EpochManager "1" *--"1" MicroBlockConsensusManager
+EpochManager "1" *--"1" EpochConsensusManager
+EpochManager "1" *--"1" ConsensusNetIOManager
+
+ConsensusNetIO -- MicroBlockConsensusConnection : messages
+ConsensusNetIO -- EpochConsensusConnection : messages
+ConsensusNetIOManager "1" *-- "32" ConsensusNetIO
+
+@enduml
+
+
+Archiver -- MicroBlockConsensusManager
+Archiver -- MicroBlockConsensusConnection
+Archiver -- EpochConsensusManager
+Archiver -- EpochConsensusConnection
+'ConsensusContainer "1" *-- "1-2" EpochManager
+
+Archiver -- IRecallHandler : use IRecallHandler
+Archiver -- logos::block_store : read and write to DB
+
+class  #lightgreen
+class  #lightgreen
+class  #lightgreen
+
+Archiver -- InternalConsensus
+Interface InternalConsensus
+InternalConsensus <|-- ConsensusContainer
+
+class MicroBlockHandler #lightgreen
+class EpochHandler #lightgreen
+class EventProposer #lightgreen
+class EpochVotingManager #lightgreen
+
+MicroBlockConsensusManager "1" *-- "32" MicroBlockConsensusConnection
+EpochConsensusManager "1" *-- "32" EpochConsensusConnection
+ConsensusNetIO -- MicroBlockConsensusConnection
+ConsensusNetIO -- EpochConsensusConnection
+ConsensusNetIOManager "1" *-- "32" ConsensusNetIO
+EpochManager "1" *--"1" ConsensusNetIOManager
+EpochManager "1" *--"1" MicroBlockConsensusManager
+EpochManager "1" *--"1" EpochConsensusManager
+
+ConsensusContainer "1" *-- "1-2" EpochManager
+
+ConsensusContainer *.. MicroBlockConsensusManager : indirectly contain (as plugin)
+ConsensusContainer *.. EpochConsensusManager :  indirectly contain (as plugin)
+

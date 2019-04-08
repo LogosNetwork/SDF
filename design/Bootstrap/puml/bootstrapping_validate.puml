@@ -1,0 +1,23 @@
+@startuml
+
+split
+      :validate is called;
+      
+      :queue epoch block;
+      :queue micro block;
+      :queue batch state block;
+
+      :if queue is greater than n;
+
+      repeat
+        :call validate on each batch state block;
+        :call applyUpdate if successful;
+        :if reached micro block tip;
+        :validate and apply micro block;
+        :if reached epoch block tip;
+        :validate and apply epoch block;
+      repeat while(Continue)
+
+      detach
+end split
+@enduml

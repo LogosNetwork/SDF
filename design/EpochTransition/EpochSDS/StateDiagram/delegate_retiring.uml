@@ -1,0 +1,41 @@
+@startuml
+
+Title Delegate-Retiring
+
+[*] --> Working
+
+State Working{
+	Working : Use the existing EpochManager and participate in consensus sessions
+	Working --> EpochWait 
+	EpochWait : set epoch start timer
+	EpochWait --> BackupDelegateOnly : epoch start timer expires
+	EpochWait --> BackupDelegateOnly : pre-prepare rejected due to\nerror code NEW_EPOCH from > 1/3 peer delegates
+	EpochWait --> BackupDelegateOnly : received a post-commit with \nnew epoch number (through P2P)
+	
+	State BackupDelegateOnly{
+		BackupDelegateOnly : Stop proposing pre-prepares 
+		BackupDelegateOnly : Still participate in consensus sessions as a backup delegate
+		BackupDelegateOnly --> DisconnectWait
+		DisconnectWait : set disconnect timer
+	}
+	
+}
+
+DisconnectWait --> Disconnect : disconnect timer expires
+
+State Disconnect{
+	Disconnect : Stop being a delegate and disconnect from peer delegates
+}
+
+@enduml
+
+note "Clock-diff-max: the maximum clock difference allowed among delegates." as N2
+note "Epoch-start-time_i: the starting time of the epoch_i." as N3
+note "Epoch-transition-period_i: [Epoch-start-time_i - Clock-diff-max, Epoch-start-time_i + Clock-diff-max]" as N4
+note "Epoch-transition-start-time_i: Epoch-start-time_i - Clock-diff-max" as N5
+note "Epoch-transition-end-time_i: Epoch-start-time_i + Clock-diff-max" as N6
+note "Delegate_epoch_i: a delegate of epoch_i." as N7
+note "Delegate-new_epoch_i: a node added to the set of delegates at the beginning of epoch_i" as N8
+note "Delegate-retired_epoch_i: a delegate of epoch_{i-1}, but not longer in epoch_i. " as N9
+note "Delegate-existing_epoch_i: (TODO better name) the set of delegate_epoch_i - the set of delegates-new_epoch_i." as N10
+note "E#_i: epoch number i in consensus messages" as N11

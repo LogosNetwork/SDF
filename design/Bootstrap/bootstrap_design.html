@@ -1,0 +1,995 @@
+<html>
+ <body>
+  <h1 id="1-overview">
+   1. overview
+  </h1>
+  <p>
+   The overview of the system is that it has four main components and a few helper classes/structures. The overall design is we have:
+  </p>
+  <ol>
+   <li>
+    bootstrap
+   </li>
+   <li>
+    bulk_pull
+   </li>
+   <li>
+    tips
+   </li>
+   <li>
+    validator
+   </li>
+  </ol>
+  <p>
+   The bootstrapping code mainly contains low-level multi-threading code as well as networking code. Its main classes are:
+  </p>
+  <ol>
+   <li>
+    bootstrap_listener
+   </li>
+   <li>
+    bootstrap_server
+   </li>
+   <li>
+    bootstrap_initiator
+   </li>
+   <li>
+    bootstrap_attempt
+   </li>
+   <li>
+    bootstrap_client
+   </li>
+  </ol>
+  <p>
+   The bulk_pull code consists of the following main classes:
+  </p>
+  <ol>
+   <li>
+    bulk_pull_client
+   </li>
+   <li>
+    bulk_pull_server
+   </li>
+  </ol>
+  <p>
+   The tips code consists of the following main classes:
+  </p>
+  <ol>
+   <li>
+    tips_req_client
+   </li>
+   <li>
+    tips_req_server
+   </li>
+  </ol>
+  <p>
+   The validator consists of one class:
+  </p>
+  <ol>
+   <li>
+    BatchBlock::validator
+   </li>
+  </ol>
+  <p>
+   The total lines of code used for this implementation is approximately 3400.
+  </p>
+  <h1 id="2-execution-concept">
+   2. execution concept
+  </h1>
+  <p>
+   The bootstrapping approach taken by logos is to update batch state blocks, micro blocks and epoch blocks. We do not update using accounts. The basic algorithm is as follows:
+  </p>
+  <pre><code class="C++">        while (true) {
+            get tips from peer
+            if behind for delegate i
+                request a pull request
+        }
+</code></pre>
+  <p>
+   And subsequently, the bootstrap client logic will issue a request from the peer for the pull requested.
+  </p>
+  <pre><code class="C++">        while (still_pulling) {
+            send peer a request for the pull
+            receive the response in the form of a 
+                block type
+            validate/apply the block
+        }
+</code></pre>
+  <p>
+   Currently, the system supports retrieving epoch, micro, and batch state blocks.
+  </p>
+  <h1 id="3-interfaces">
+   3. interfaces
+  </h1>
+  <p>
+   <img alt="interface" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/interface.png" title="interface"/>
+  </p>
+  <h1 id="4-use-case-diagrams">
+   4. use-case diagrams
+  </h1>
+  <p>
+   The use case here is that a node that is bootstrapping, requests from the peer node its state, and ultimately retrieves its blocks where the bootstrapping node will validate and apply the blocks to the database in attempt to sync up the two databases.
+  </p>
+  <p>
+   <img alt="Use Case Diagram" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/bootstrap_use_case.png" title="Use Case Diagram"/>
+  </p>
+  <h1 id="5-state-diagrams">
+   5. state diagrams
+  </h1>
+  <p>
+   Overall state :
+  </p>
+  <p>
+   <img alt="interface0" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/state.png" title="interface0"/>
+  </p>
+  <p>
+   The intial sequence for initiating bootstrapping is as follows :
+  </p>
+  <p>
+   <img alt="interface1" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/bootstrapping_1.png" title="interface1"/>
+  </p>
+  <p>
+   Responding to tips request and setting up a pull request :
+  </p>
+  <p>
+   <img alt="interface2" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/bootstrapping_2.png" title="interface2"/>
+  </p>
+  <p>
+   Responding to a pull request :
+  </p>
+  <p>
+   <img alt="interface3" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/bootstrapping_3.png" title="interface3"/>
+  </p>
+  <p>
+   Validation of blocks :
+  </p>
+  <p>
+   <img alt="validation" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/bootstrapping_validate.png" title="validation"/>
+  </p>
+  <h1 id="6-classes">
+   6. classes
+  </h1>
+  <p>
+   An overview of the main classes :
+  </p>
+  <p>
+   <img alt="classes" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/classes.png" title="classes"/>
+  </p>
+  <h2 id="bootstrap_listener">
+   bootstrap_listener
+  </h2>
+  <p>
+   This class is used to listen to connections from peers. In
+   <strong>
+    bootstrap_listener::start()
+   </strong>
+   are the calls to accept server sockets. The main function here is
+   <strong>
+    logos::bootstrap_listener::accept_action
+   </strong>
+   where new server connections are made and stored in a container called
+   <strong>
+    connections
+   </strong>
+   .
+   <br/>
+   Of importance is the call to:
+  </p>
+  <pre><code class="C++">auto connection (std::make_shared&lt;logos::bootstrap_server&gt; (socket_a, node.shared ()));
+</code></pre>
+  <p>
+   Which creates the bootstrap_server class from which all servers are called. The start of the bootstrap_server logic is in the method
+   <strong>
+    receive
+   </strong>
+   which is also called from
+   <strong>
+    accept_action
+   </strong>
+   .
+  </p>
+  <h2 id="bootstrap_server">
+   bootstrap_server
+  </h2>
+  <p>
+   This class is responsible for invocking the other servers. Note that this design uses a visitor design pattern rather than inheritance.  That is to say, the bulk_pull_server, and tips_req_server do not inherit from bootstrap_server. However, they are called from the server using a visitor pattern. See
+   <strong>
+    request_response_visitor
+   </strong>
+   for more information.  The design allows for the server to be available as a
+   <strong>
+    connection
+   </strong>
+   member variable inside the bulk_pull_server, and tips_req_server. A similar design is used in implementing clients.
+  </p>
+  <p>
+   As aforementioned, the main starting point for bootstrap_server is:
+  </p>
+  <pre><code class="C++">bootstrap_server::receive()
+</code></pre>
+  <p>
+   Which calls a Boost ASIO async_read call to start the server read from its socket. Additional methods and their purpose are:
+  </p>
+  <pre><code class="C++">void logos::bootstrap_server::receive_bulk_pull_action (boost::system::error_code const &amp; ec, size_t size_a)
+void logos::bootstrap_server::receive_tips_req_action (boost::system::error_code const &amp; ec, size_t size_a)
+void logos::bootstrap_server::add_request (std::unique_ptr&lt;logos::message&gt; message_a)
+void logos::bootstrap_server::finish_request ()
+void logos::bootstrap_server::run_next ()
+</code></pre>
+  <p>
+   Where
+   <strong>
+    receive_bulk_pull_action
+   </strong>
+   receives the bulk_pull requests from client and
+   <strong>
+    receive_tips_req_action
+   </strong>
+   receives the tips requests from client.
+   <strong>
+    add_request
+   </strong>
+   adds a request to the
+   <strong>
+    requests
+   </strong>
+   queue which is defined as:
+  </p>
+  <pre><code class="C++">std::queue&lt;std::unique_ptr&lt;logos::message&gt;&gt; requests;
+</code></pre>
+  <p>
+   Note that bootstrapping uses messages that derive from
+   <strong>
+    logos::message
+   </strong>
+   for representing a pull request or tip request for example.
+  </p>
+  <p>
+   <strong>
+    finish_request
+   </strong>
+   is called when the bulk_pull_server finishes processing the requests. In our case, finishes walking a chain and sending all of the blocks requested back to the client. It is important to have this function called via:
+  </p>
+  <pre><code class="C++">connection-&gt;finish_request()
+</code></pre>
+  <p>
+   From inside the bulk_pull_server.
+  </p>
+  <p>
+   <strong>
+    run_next
+   </strong>
+   is a method called to process the next request from the queue. Note that how this works is by retreiving a request from the requests queue mentioned above, and applying a visitor pattern as follows:
+  </p>
+  <pre><code class="C++">request_response_visitor visitor (shared_from_this ());
+requests.front()-&gt;visit (visitor);
+</code></pre>
+  <p>
+   Where the
+   <strong>
+    request_response_visitor
+   </strong>
+   handles the various message types by invocking the correct server. For example, in the case of bulk_pull we have the request encapsualted in
+   <strong>
+    logos::pull_info
+   </strong>
+   object, and we apply the following method from the visitor:
+  </p>
+  <pre><code class="C++">void bulk_pull (logos::bulk_pull const &amp;) override
+</code></pre>
+  <p>
+   Which in turn calls the bulk_pull_server in this manner:
+  </p>
+  <pre><code class="C++">auto response (std::make_shared&lt;logos::bulk_pull_server&gt; (connection, std::unique_ptr&lt;logos::bulk_pull&gt; (static_cast&lt;logos::bulk_pull *&gt; (connection-&gt;requests.front ().release ()))));
+response-&gt;send_next ();
+</code></pre>
+  <p>
+   Notice how the connection is passed into the constructor of the bulk_pull_server and that the connection object is the bootstrap_server class.
+  </p>
+  <h2 id="bootstrap_initiator">
+   bootstrap_initiator
+  </h2>
+  <p>
+   The initiator class is what starts bootstrapping. It can be called from a unit test, for example:
+  </p>
+  <pre><code class="C++">node2.bootstrap_initiator.bootstrap (node1.network.endpoint ());
+</code></pre>
+  <p>
+   Where we specify to a node a peer to bootstrap from. In normal operation, the code calls the following in a loop from node.cpp:
+  </p>
+  <pre><code class="C++">logos::node::ongoing_bootstrap()
+{   ...
+    bootstrap_initiator.bootstrap ();
+    ...
+}
+</code></pre>
+  <p>
+   Where the bootstrap is launched every n seconds. This interval is currently set to 300s (but in testing is set to much smaller value).
+  </p>
+  <p>
+   The main methods from bootstrap_initiator are:
+  </p>
+  <pre><code class="C++">void logos::bootstrap_initiator::bootstrap ()
+void logos::bootstrap_initiator::bootstrap (logos::endpoint const &amp; endpoint_a, bool add_to_peers)
+void logos::bootstrap_initiator::run_bootstrap ()
+bool logos::bootstrap_initiator::in_progress ()
+std::shared_ptr&lt;logos::bootstrap_attempt&gt; logos::bootstrap_initiator::current_attempt ()
+void logos::bootstrap_initiator::stop ()
+</code></pre>
+  <p>
+   The
+   <strong>
+    bootstrap()
+   </strong>
+   and
+   <strong>
+    bootstrap(logos::endpoint,bool)
+   </strong>
+   methods initiate bootstrapping. In the former, we select a peer from a list, and in the later, we directly initiate bootstrapping from the specified endpoint. We currently use a specific endpoint for testing.
+  </p>
+  <p>
+   <strong>
+    run_bootstrap
+   </strong>
+   is the method that runs the bootstrapping for a
+   <strong>
+    bootstrap_attempt
+   </strong>
+   .
+  </p>
+  <p>
+   The methods
+   <strong>
+    in_progress
+   </strong>
+   and
+   <strong>
+    current_attempt
+   </strong>
+   return true if there is a bootstrap in progress (i.e., when the attempt object is not null) and return the current attempt object respectively.
+  </p>
+  <p>
+   The
+   <strong>
+    stop
+   </strong>
+   method stops the bootstrapping (by calling
+   <strong>
+    attempt-&gt;stop()
+   </strong>
+   )
+  </p>
+  <h2 id="bootstrap_attempt">
+   bootstrap_attempt
+  </h2>
+  <p>
+   This class encapsulates a given bootstrap request and effecitively is the top-level control of bootstrapping requests and networking. It is contained in
+   <strong>
+    bootstrap_initiator
+   </strong>
+   and itself contains the following main methods:
+  </p>
+  <pre><code class="C++">void run ();
+bool consume_future (std::future&lt;bool&gt; &amp;);
+void populate_connections ();
+bool request_tips (std::unique_lock&lt;std::mutex&gt; &amp;);
+void request_pull (std::unique_lock&lt;std::mutex&gt; &amp;);
+void request_push (std::unique_lock&lt;std::mutex&gt; &amp;);
+void add_connection (logos::endpoint const &amp;);
+void pool_connection (std::shared_ptr&lt;logos::bootstrap_client&gt;);
+void stop ();
+void requeue_pull (logos::pull_info const &amp;);
+void add_pull (logos::pull_info const &amp;);
+bool still_pulling ();
+bool still_pushing ();
+void process_fork (MDB_txn *, std::shared_ptr&lt;logos::block&gt;);
+unsigned target_connections (size_t pulls_remaining);
+bool should_log ();
+</code></pre>
+  <p>
+   The main method here is
+   <strong>
+    run()
+   </strong>
+   which drives the bootstrapping. From there we see calls to request_tips (which obtains the tips from the peer and produces as a side-effect the
+   <strong>
+    logos::pull_info
+   </strong>
+   structures queing them up into the
+   <strong>
+    pulls
+   </strong>
+   vector. From there, the system decides to issue
+   <strong>
+    request_pull
+   </strong>
+   calls on for each pull request.
+  </p>
+  <p>
+   Another important method here is
+   <strong>
+    populate_connections
+   </strong>
+   which is responsible for managing peer connections. It currently checks which peers are slow and attempts to disconnect from them. It also decides to allocate new peer connections to satisfy pull requests.
+  </p>
+  <p>
+   <strong>
+    pool_connection
+   </strong>
+   allows the client servers to place a connection (with a live socket) onto an idle queue for re-use at a later point. Note that care must be taken that all re-usuable sockets are queued up upon successful completion of a request.
+  </p>
+  <p>
+   The helper methods
+   <strong>
+    add_pull
+   </strong>
+   ,
+   <strong>
+    still_pulling
+   </strong>
+   ,
+   <strong>
+    target_connections
+   </strong>
+   , and
+   <strong>
+    still_pushing
+   </strong>
+   are used to add a pull request (called from tips client), deciding whether the system is still doing pull requests, calculating how many connections to create based on number of pulls outstanding, and determine if we are still in the process of handling push requests.
+  </p>
+  <h2 id="bootstrap_client">
+   bootstrap_client
+  </h2>
+  <p>
+   The bootstrap_client is the driver of all client requests. It is similar to the server class in that it envokes the correct client to handle one of the possible requests (tips,push,pull). The main methods of this class are:=
+  </p>
+  <pre><code class="C++">void run ();
+void start_timeout (); 
+void stop_timeout (); 
+void stop (bool force);
+double block_rate () const;
+double elapsed_seconds () const;
+</code></pre>
+  <p>
+   The
+   <strong>
+    run
+   </strong>
+   method is the start of the client logic.
+   <strong>
+    start_timeout
+   </strong>
+   ,
+   <strong>
+    stop_timeout
+   </strong>
+   control timeouts on the socket connections. Note that all read/write operationsuse boost::asio
+   <strong>
+    async_read/async_write
+   </strong>
+   . The
+   <strong>
+    stop
+   </strong>
+   method stops the client. Passing in false implies we stop after the operation specific client finishes its request (i..e, after we finish pulling) and passing in true implies we stop immediately.
+  </p>
+  <p>
+   The other two functions are for calculating the block rate and elapsed time (since the client started), respectively.
+  </p>
+  <h2 id="bulk_pull_client">
+   bulk_pull_client
+  </h2>
+  <p>
+   The
+   <strong>
+    bulk_pull_client
+   </strong>
+   is responsible for making a connection to the peer given a request for a pull. A pull request is encapsulated using
+   <strong>
+    logos::pull_info
+   </strong>
+   class and is stored in a queue called
+   <strong>
+    pulls
+   </strong>
+   inside the bootstrap.cpp code. A given pull is taken from the top of the queue and processed using
+   <strong>
+    request_pull
+   </strong>
+   . This is a call to the
+   <strong>
+    bulk_pull_client
+   </strong>
+   passing in the pull_info an the connection object which is the bootstrap_client class. Inside the client is the code that handles making asynchronous requests via boost::asio to the server.
+  </p>
+  <p>
+   The main methods of this class are:
+  </p>
+  <pre><code class="C++">void request (); 
+void request_batch_block();
+void receive_block (); 
+void received_type (); 
+void received_block (boost::system::error_code const &amp;, size_t);
+</code></pre>
+  <p>
+   Where
+   <strong>
+    request
+   </strong>
+   is the start of the request to the peer.
+   <strong>
+    request_batch_block
+   </strong>
+   is specifically for logos blocks. The async_read/async_write calls used require callbacks and are setup in a so-called composed operation. The methods which are listed in order of execution are
+   <strong>
+    receive_block
+   </strong>
+   ,
+   <strong>
+    received_type
+   </strong>
+   , and
+   <strong>
+    received_block
+   </strong>
+   . These receive the blocks in three stages, first the response from the initial request, then the type (a single character read and tested for block type), and then the actual block that is sent. In our case, one of
+   <strong>
+    Epoch
+   </strong>
+   ,
+   <strong>
+    Micro
+   </strong>
+   , or
+   <strong>
+    Batch State Blocks
+   </strong>
+   . Once the code receives a block, it calls the validator class to pass the block (which is represented as a shared_ptr) to the validator for processing.
+   <br/>
+   The validator uses the respective
+   <strong>
+    Validate
+   </strong>
+   and
+   <strong>
+    ApplyUpdate
+   </strong>
+   methods of each of the supported block types.
+  </p>
+  <h2 id="bulk_pull_server">
+   bulk_pull_server
+  </h2>
+  <p>
+   The
+   <strong>
+    bulk_pull_server
+   </strong>
+   is responsible for transferring blocks from the peer to the client. It is created inside bootstrap.cpp via the method
+   <br/>
+   <strong>
+    logos::bootstrap_listener::accept_action
+   </strong>
+   which creates a connection object using:
+   <strong>
+    auto connection (std::make_shared
+    <logos::bootstrap_server>
+     (socket_a, node.shared ()));
+    </logos::bootstrap_server>
+   </strong>
+  </p>
+  <p>
+   Notice that this is where the connection for the
+   <strong>
+    bootstrap_server
+   </strong>
+   is created. The actual call to create
+   <strong>
+    bulk_pull_server
+   </strong>
+   happens in bootstrap.cpp, method in
+   <strong>
+    request_response_visitor
+   </strong>
+   called
+   <strong>
+    bulk_pull
+   </strong>
+   . The visitor is called from
+   <strong>
+    bootstrap_server::run_next
+   </strong>
+   where a request is pulled of the queue and processed using the visitor pattern.
+  </p>
+  <p>
+   The main methods in this class are:
+  </p>
+  <pre><code class="C++">void set_current_end ();
+std::unique_ptr&lt;logos::block&gt; get_next ();
+void send_next ();
+void sent_action (boost::system::error_code const &amp;, size_t);
+void send_finished ();
+void no_block_sent (boost::system::error_code const &amp;, size_t);
+</code></pre>
+  <p>
+   Where
+   <strong>
+    set_current_end
+   </strong>
+   sets the hash that when reached implies we reached the end of transmission.
+   <strong>
+    get_next
+   </strong>
+   gets the next block in the chain,
+   <strong>
+    send_next
+   </strong>
+   sends the next block. Like the
+   <strong>
+    bulk_pull_client
+   </strong>
+   , the server uses boost::asio to do the async_write. Therefore, it requires several methods for performing the composed operation. These methods are (in order of execution),
+   <strong>
+    sent_action
+   </strong>
+   ,
+   <strong>
+    send_finished
+   </strong>
+   , and
+   <strong>
+    no_block_sent
+   </strong>
+   . The code uses
+   <strong>
+    sent_action
+   </strong>
+   to acknowledge the block has been sent.
+   <strong>
+    send_finished
+   </strong>
+   is the last call made to send the last block marked by a
+   <strong>
+    not_a_block
+   </strong>
+   type. This is important because it signals to the client the end of transmission. The server does not validate the blocks it sends, as the validation is left on the client side.
+  </p>
+  <h2 id="tips_req_client">
+   tips_req_client
+  </h2>
+  <p>
+   The
+   <strong>
+    tips_req_client
+   </strong>
+   sends the initial message to the
+   <strong>
+    tips_req_server
+   </strong>
+   . In the message, is a request for tips for batch state blocks, micro blocks and epoch blocks. The message is relatively simple, and its response is handled in the is class. It is expected that the server sends back its tips (the peer’s tips) for which we intend to decide what to do with each tip in terms of making requests to the bootstrap code to pull or push. The main methods here are:
+  </p>
+  <pre><code class="C++">void run ();
+void receive_tips ();
+void receive_tips_header ();
+void received_batch_block_tips (boost::system::error_code const &amp;, size_t);
+void received_tips (boost::system::error_code const &amp;, size_t);
+</code></pre>
+  <p>
+   <strong>
+    run
+   </strong>
+   starts the process of sending a request to the server.
+   <strong>
+    receive_tips
+   </strong>
+   ,
+   <strong>
+    receive_tips_header
+   </strong>
+   ,
+   <strong>
+    receive_batch_block_tips
+   </strong>
+   , and
+   <strong>
+    received_tips
+   </strong>
+   are networking code to receive the tips, and
+   <strong>
+    received_tips
+   </strong>
+   does the processing of calling the bootstrap code to request a pull or push. Note that the logic deciding what to do is based on sequence numbers returned from the server. Because we request the entire chain for a given delegate, the chains have to be linked from micro block transitions.
+  </p>
+  <h2 id="tips_req_server">
+   tips_req_server
+  </h2>
+  <p>
+   The
+   <strong>
+    tips_req_server
+   </strong>
+   is responsible for sending the peer’s tips so that the requesting node can determine where it is. The main methods here are:
+  </p>
+  <pre><code class="C++">void send_next ();
+void sent_action (boost::system::error_code const &amp;, size_t);
+void send_finished ();
+void no_block_sent (boost::system::error_code const &amp;, size_t);
+void next ();
+void send_batch_blocks_tips();
+</code></pre>
+  <p>
+   Where
+   <strong>
+    send_next
+   </strong>
+   decides which tip to send next,
+   <strong>
+    send_action
+   </strong>
+   is used for asynchronous write of the tip to the network, and
+   <strong>
+    send_finished
+   </strong>
+   and
+   <strong>
+    no_block_sent
+   </strong>
+   send the signal that the transmission is complete.
+   <strong>
+    send_batch_block_tips
+   </strong>
+   is the main method here which is responsible for sending tips information for each delegate. Note that the client always requests the epoch and micro blocks first, followed by batch blocks.
+  </p>
+  <h2 id="batchblockvalidator">
+   BatchBlock::validator
+  </h2>
+  <p>
+   This class is purpose is to
+   <strong>
+    Validate
+   </strong>
+   and
+   <strong>
+    ApplyUpdate
+   </strong>
+   each incoming block. It sorts the queue of blocks, and calls the validation and apply of the batch state blocks, when it reaches a micro block, it validates the micro block, and when it reaches the epoch block, it validates the epoch block. The micro block is reached when we process its batch state block tips, and the epoch block is reached when we process its micro block tips. The system processes each request concurrently and queues the blocks up for processing as the downloading continues.
+  </p>
+  <p>
+   The main methods here are:
+  </p>
+  <pre><code class="C++">void add_micro_block(std::shared_ptr&lt;bulk_pull_response_micro&gt; &amp;m)
+void add_epoch_block(std::shared_ptr&lt;bulk_pull_response_epoch&gt; &amp;e)
+bool validate(std::shared_ptr&lt;bulk_pull_response&gt; block);
+</code></pre>
+  <p>
+   Where
+   <strong>
+    add_micro_block
+   </strong>
+   and
+   <strong>
+    add_epoch_block
+   </strong>
+   add received micro and epoch blocks to the validator on seperate queues. And
+   <strong>
+    validate
+   </strong>
+   is used to determine if the batch block is valid. Note that we queue a certain number of blocks before attempting to validate, and if we can not proceed, we wait for more blocks to arrive.
+  </p>
+  <p>
+   The code wraps up the epoch, micro, and batch blocks into its own internal structures to keep the modules seperated and so that bootstrapping knows little of the other components except to call the
+   <br/>
+   required methods.
+  </p>
+  <h1 id="7-sequence-diagrams">
+   7. sequence diagrams
+  </h1>
+  <p>
+   An illustration of retry logic.
+  </p>
+  <p>
+   <img alt="bootstrap retry" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/retry.png" title="bootstrap retyr"/>
+  </p>
+  <p>
+   An illustration of logical bootstrapping.
+  </p>
+  <p>
+   <img alt="bootstrap logical" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/logical.png" title="bootstrap logical"/>
+  </p>
+  <p>
+   An illustration of parallel bootstrapping.
+  </p>
+  <p>
+   <img alt="bootstrap parallel" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/parallel.png" title="bootstrap parallel"/>
+  </p>
+  <p>
+   An illustration of the sequence for bootstrap initialization and start of bulk_pull requests.
+  </p>
+  <p>
+   <img alt="server sequence diagram" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/bootstrapping_server_seq.png" title="server sequence diagram"/>
+  </p>
+  <p>
+   An illustration of the system functionality. This diagram shows how bootstrapping works when its up and running. Main ideas is the request for tips, the response, and then the subsequent pulls.
+  </p>
+  <p>
+   <img alt="sequence diagram" src="/home/ubuntu/src/remarkable/bootstrap_docs/puml/bootstrapping_sequence_diagram.png" title="sequence diagram"/>
+  </p>
+  <h1 id="8-resources">
+   8. resources
+  </h1>
+  <ul>
+   <li>
+    <p>
+     Currently, the code is too aggressive in allocating sockets, and more work is needed to make sure we don’t run out of sockets in a given run.
+    </p>
+   </li>
+   <li>
+    <p>
+     The requests submitted by the tips client should wait until a given delegate chain is retrieved before submitting more requests for that delegate. This is currently done in
+     <em>
+      tips_req_client
+     </em>
+    </p>
+   </li>
+  </ul>
+  <h1 id="9-implementation-and-algorithms">
+   9. implementation and algorithms
+  </h1>
+  <ul>
+   <li>
+    The validation algorithm is currently:
+   </li>
+  </ul>
+  <pre><code class="C++">queue epoch blocks
+queue micro blocks
+queue batch state blocks
+
+bool validate()
+{
+     when batch state blocks queue is greater than n do
+        sort queue based on timestamp
+        iterate through each batch state block
+            validate batch state block i
+            apply update on batch state block i
+
+        if we reach the next micro block tips
+           validate micro block
+           apply update on micro block
+
+        if we reach the next epoch block tips
+           validate epoch block
+}
+</code></pre>
+  <ul>
+   <li>
+    Description for logical bootstrapping:
+   </li>
+  </ul>
+  <p>
+   Client sends sequence numbers and hashes to server
+  </p>
+  <p>
+   Server decides to initiate bootstrapping on its end if it’s behind by
+   <br/>
+   Calling connection-&gt;node-&gt;ongoing_bootstrap()
+   <br/>
+   using sequence numbers as a guide.
+   <br/>
+   Note that ongoing_bootstrap() is called automatically every 5 minutes,
+   <br/>
+   but I believe we can call it early in the case we are behind.
+  </p>
+  <p>
+   The server then sends back a response
+   <br/>
+   indicating to proceed with next peer.
+   <br/>
+   This allows the client to set the promise to false and not initiate pulls from this peer.
+  </p>
+  <p>
+   Otherwise, the server sends back the range for doing a pull of epoch blocks
+   <br/>
+   using the client’s epoch block tip as a start and its own epoch block tip as an end.
+   <br/>
+   The client then initates the pull of the epoch blocks from the server.
+  </p>
+  <p>
+   When the epoch block tip is equal to the peer’s, the server sends
+   <br/>
+   back the range of micro blocks using the client’s micro block tip as a start
+   <br/>
+   and its own micro block tip back to the client. The client then pulls the
+   <br/>
+   chain of micro blocks. Note that when we send epoch
+   <br/>
+   block chains and pull epoch blocks, in the next run,
+   <br/>
+   we will get the micro block tips as we sync up the epoch blocks.
+  </p>
+  <p>
+   If we reach a state where the micro block tips are equal, we have to send the bsb block range
+   <br/>
+   (from the client’s tip to our tip).
+  </p>
+  <p>
+   This means, the tips client has to understand which type of block to pull
+   <br/>
+   given the aforementioned responses the tips server can give.
+  </p>
+  <p>
+   When micro blocks arrive (in their callback) we request the associated bsb blocks. And the bsb blocks will arive for each
+   <br/>
+   micro block in a more ordered way. As the arrive, they will be validated and
+   <br/>
+   applied to the database.
+  </p>
+  <p>
+   When we reach the end of epoch block transmission, it should pull the remaining micro blocks by going from the last
+   <br/>
+   epoch block micro block tip to the micro block tip on the peer.
+   <br/>
+   This will be done in the tips client/server.
+  </p>
+  <p>
+   When we reach the end of micro block transmission, it should pull from
+   <br/>
+   the last micro block bsb tips to the peer’s bsb block tips for a request to be made for
+   <br/>
+   remaining bsb blocks. This will be done in the tips client/server.
+  </p>
+  <p>
+   Note that the peer’s tip for epoch, micro, and bsb can be retrieved and perhaps sent to the pull request if needed.
+  </p>
+  <p>
+   This implies changes in the tips.cpp code and in the callback handlers of epoch/micro block.
+  </p>
+  <p>
+   Note that in the current case, and in this case, we would be validating bsb blocks first, followed
+   <br/>
+   by micro and epoch and that this is the normal sequence of things similar to the way consensus processes
+   <br/>
+   the blocks.
+  </p>
+  <ul>
+   <li>
+    parallel bootstrapping:
+   </li>
+  </ul>
+  <p>
+   This is already implemented within the code. It selects peers from a list and tries to bootstrap from them.
+   <br/>
+   Each request is made to a seperate peer and each peer responds with the blocks that were asked of it. We still
+   <br/>
+   need to integrate with p2p peer list and incorporate blacklisting. One possible design for blacklisting is
+   <br/>
+   to re-use the p2p code for this, and then to keep track of which ip address sent us which block
+   <br/>
+   (using the IP Address or an integer representing the peer in the list), and when
+   <br/>
+   a criteria is reached, such as maximum number of retries, we can decide to add the peer to a blacklist.
+   <br/>
+   The API should include adding the peer to the list (perhaps using a boost endpoint as a way of identifying the
+   <br/>
+   peer) and a way to check if the peer is in the blacklist. To implement, we
+   <br/>
+   would check in populate_connections() if the peer is blacklisted, and avoid using that peer for
+   <br/>
+   a connection. When we decide that a block is no good (in validator) we can add the peer to the blacklist.
+   <br/>
+   The p2p peer list has to keep the current set of peers to communicate with and has to populate the
+   <br/>
+   bootstrapping peer list (or we can change the implementation
+   <br/>
+   of logos::peer_container::bootstrap_peer to return a logos::endpoint based on what is in the peer list and
+   <br/>
+   perhaps taking into consideration if the peer is blacklisted or not).
+  </p>
+  <ul>
+   <li>
+    consolidate into one message:
+   </li>
+  </ul>
+  <p>
+   This will be done as mentioned in our logical bootstrapping design.
+  </p>
+ </body>
+</html>

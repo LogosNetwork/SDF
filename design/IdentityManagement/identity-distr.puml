@@ -1,0 +1,21 @@
+@startuml
+
+activate Delegate1
+activate P2p
+activate Delegate2
+
+Delegate1 -> Delegate1 : encrypt IP/port\nfor Delegates 2-32\n\
+with delegates public\nECIES public key\nSign with private BLS key
+
+Delegate1 -> P2p : AdAddress via gossip protocol
+...
+P2p -> Delegate2 : Received AdAddress
+
+Delegate2 -> Delegate2 : Validate Delegate1 BLS signature
+Delegate2 -> Delegate2 : Decrypt IP/Port with\nDelegate2 private ECIES key
+
+Delegate2 -> Delegate1 : Connect
+Delegate2 -> Delegate1 : Handshake\nDelegate2 AdMessage for Delegate1
+Delegate1 -> Delegate2 : Handshake\nDelegate1 AdMessage for Delegate2
+
+@enduml

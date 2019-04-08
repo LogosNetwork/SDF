@@ -1,0 +1,31 @@
+@startuml
+
+scale 12 as 100 pixels
+Title Delegate Lifetime
+concise "Timeline" as TL
+
+TL is offline
+
+@0
+TL is epoch_1
+@12
+TL is epoch_2
+@24
+TL is epoch_3
+@36
+TL is epoch_4
+@48
+TL is offline
+
+@TL
+@-2 <-> @+4 : {new}
+@10 <-> @14 : {persistent}
+@22 <-> @26 : {persistent}
+@34 <-> @38 : {persistent}
+@46 <-> @50 : {retiring}
+
+
+caption \nEvery epoch is 12 hours. \nA delegate serves 4 epochs and \nis involved in 5 epoch transition periods (the red arrows).
+@enduml
+
+

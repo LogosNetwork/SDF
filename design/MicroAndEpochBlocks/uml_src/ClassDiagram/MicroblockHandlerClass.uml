@@ -1,0 +1,10 @@
+@startuml
+
+MicroBlockHandler : logos::block_store store
+MicroBlockHandler : IRecallHandler recall_handler
+
+MicroBlockHandler : Build()
+MicroBlockHandler : Validate()
+MicroBlockHandler : ApplyUpdates()
+
+@enduml

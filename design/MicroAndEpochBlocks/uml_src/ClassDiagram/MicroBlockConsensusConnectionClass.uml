@@ -1,0 +1,10 @@
+@startuml
+abstract ConsensusConnection
+ConsensusConnection <|-- MicroBlockConsensusConnection
+
+MicroBlockConsensusConnection : ArchiverMicroBlockHandler microblock_handler
+
+MicroBlockConsensusConnection : Validate()
+MicroBlockConsensusConnection : ApplyUpdates()
+MicroBlockConsensusConnection : IsPrePrepared()
+@enduml

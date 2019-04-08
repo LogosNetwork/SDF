@@ -1,0 +1,40 @@
+@startuml
+participant EventProposer
+participant ConsensusContainer
+participant "EpochManager:_cur_epoch" as _cur_epoch
+participant "EpochManager:_tmp_epoch" as _tmp_epoch
+activate EventProposer
+activate ConsensusContainer
+activate _cur_epoch
+create _cur_epoch
+ConsensusContainer -> _cur_epoch : Create on node start
+_cur_epoch -> _cur_epoch : Connect to peers
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> _cur_epoch : Transaction
+_cur_epoch -> _cur_epoch : Consensus (Primary Delegate)
+loop every 12 hours
+EventProposer -> ConsensusContainer : StartEpochTransactionsEvents (T-5min)
+create _tmp_epoch
+ConsensusContainer -> _tmp_epoch
+activate _tmp_epoch
+_tmp_epoch -> _tmp_epoch : Connect to peers
+...
+EventProposer -> ConsensusContainer : StartEpochTransition (T-20sec)
+_tmp_epoch -> _tmp_epoch : Consensus (Backup Delegate)
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> _cur_epoch : Transaction
+_cur_epoch -> _cur_epoch : Consensus (Primary Delegate)
+...
+EventProposer -> ConsensusContainer : StartEpoch (T: 00:00)
+_tmp_epoch -> _cur_epoch : Swap _cur_epoch with _tmp_epoch
+ConsensusContainer -> _cur_epoch : Transaction
+_cur_epoch -> _cur_epoch : Consensus (Primary Delegate)
+_tmp_epoch ->] : Forward Only
+...
+EventProposer -> ConsensusContainer : EndEpochTransition (T+20sec)
+deactivate _tmp_epoch
+end
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> _cur_epoch : Transaction
+_cur_epoch -> _cur_epoch : Consensus (Primary Delegate)
+@enduml

@@ -1,0 +1,15 @@
+@startuml
+
+split
+      :Create tips_req_client;
+      repeat
+      
+      :tips_req_client::run;
+      :send message to tips_req_server;
+      :receive messages from tips_req_server;
+      :call add_pull to queue pull request;
+      repeat while(continue)
+      
+      detach
+end split
+@enduml

@@ -1,0 +1,69 @@
+@startuml
+
+Title Fallback Delegate
+	
+State POST_COMMIT_RECEIVED{
+}
+
+State BACKUP_CONSENSUS{
+
+	note "prepare and commit for the current consensus session\nwill be saved and used at the FALLBACK_PREPARE_WAIT \nor FALLBACK_COMMIT_WAIT states" as N3
+ 
+    State COMMIT{
+	}
+    
+	PREPARE_WAIT --> FALLBACK_PREPARE : timer expired 
+	
+	POST_COMMIT_WAIT --> FALLBACK_COMMIT : timer expired
+
+
+	State FALLBACK_CONSENSUS {
+		State DROP{
+			DROP : for every request in the batch\nsend a reject message to the client\n(can be optimized so that only a small set\nof delegates send out reject messages) 
+		}
+		
+		State FALLBACK_RECALL_PENDING_WAIT{
+			FALLBACK_RECALL_PENDING_WAIT : set a RECALL_PENDING timer
+			FALLBACK_RECALL_PENDING_WAIT --> RECALL : timer expire
+			FALLBACK_RECALL_PENDING_WAIT -left-> POST_COMMIT_RECEIVED : received post-commit
+			RECALL : start the recall protocol		
+		}		
+		
+		State FALLBACK_CONSENSUS_DONE{
+		
+			FALLBACK_CONSENSUS_DONE : send post-commit to the client and network 
+			'FALLBACK_CONSENSUS_DONE : unreserve accounts 
+			FALLBACK_CONSENSUS_DONE : update local DB, account balance, last hash etc
+		}
+	
+	    State FALLBACK_PREPARE{
+		    FALLBACK_PREPARE : send the prepare to all peers including the primary    
+		    FALLBACK_PREPARE --> FALLBACK_PREPARE_WAIT
+		    
+		    FALLBACK_PREPARE_WAIT : set a FALLBACK_PREPARE timer 
+		    FALLBACK_PREPARE_WAIT --> FALLBACK_PREPARE_TIMEOUT : timer expire 
+			FALLBACK_PREPARE_WAIT --> COMMIT : Received post_prepare from primary 			
+			FALLBACK_PREPARE_WAIT --> FALLBACK_PREPARE_WAIT : prepare received,\n <= 2/3 agree on the batch
+			FALLBACK_PREPARE_WAIT --> FALLBACK_COMMIT : prepare received,\n > 2/3 agree on the batch
+			
+			FALLBACK_PREPARE_TIMEOUT : count the number of prepare or error messages received
+			FALLBACK_PREPARE_TIMEOUT --> DROP : > 2/3 messages
+			FALLBACK_PREPARE_TIMEOUT --> FALLBACK_RECALL_PENDING_WAIT : <= 2/3 messages\ni.e. network issue
+			
+	    }
+		
+		State FALLBACK_COMMIT{
+		    FALLBACK_COMMIT : send commit to peers including the primary
+			FALLBACK_COMMIT : set a FALLBACK_COMMIT timer    
+		    FALLBACK_COMMIT --> FALLBACK_COMMIT_WAIT
+		    
+	 	    FALLBACK_COMMIT_WAIT --> FALLBACK_RECALL_PENDING_WAIT : timer expired 		    
+			FALLBACK_COMMIT_WAIT --> FALLBACK_COMMIT_WAIT : received commit, <= 2/3 valid
+			FALLBACK_COMMIT_WAIT --> FALLBACK_CONSENSUS_DONE : received commit, > 2/3 valid			
+		}
+		DROP --> [*]
+		FALLBACK_CONSENSUS_DONE --> [*]
+	}
+}
+
+@enduml

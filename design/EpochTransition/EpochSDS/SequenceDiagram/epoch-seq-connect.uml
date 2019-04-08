@@ -1,0 +1,80 @@
+@startuml
+
+Title Epoch Transition Network Connection
+
+participant ConsensusContainer
+activate ConsensusContainer
+
+create EpochPeerManager
+ConsensusContainer -> EpochPeerManager  : create
+activate EpochPeerManager
+
+create PeerAcceptor
+EpochPeerManager -> PeerAcceptor
+activate PeerAcceptor
+PeerAcceptor -> PeerAcceptor : Accept //Async, wait for next\n            //connection request
+
+participant "EpochManager:current_epoch" as current_epoch
+create current_epoch
+ConsensusContainer -> current_epoch
+activate current_epoch
+
+participant "ConsensusNetIOManager:current" as current_net
+create current_net
+current_epoch -> current_net
+activate current_net
+
+...
+[-> ConsensusContainer : Epoch Transition Start
+
+participant "EpochManager:transition_epoch" as transition_epoch
+create transition_epoch
+ConsensusContainer -> transition_epoch
+activate transition_epoch
+
+participant "ConsensusManager:transition" as transition_consensus
+create transition_consensus
+transition_epoch -> transition_consensus
+activate transition_consensus
+
+participant "ConsensusNetIOManager:transition" as transition_net
+create transition_net
+transition_epoch -> transition_net
+activate transition_net
+
+[-> PeerAcceptor : Peer Connect
+PeerAcceptor -> EpochPeerManager : OnConnectionAccepted:socket
+EpochPeerManager -> EpochPeerManager : AsyncRead Peer's KeyAdvertisement
+
+PeerAcceptor -> PeerAcceptor : Accept 
+
+
+[-> EpochPeerManager : Peer {Pub Key,Delegate Id,Delegate Set:{Old,New}}
+EpochPeerManager -> ConsensusContainer : Bind peer connection
+alt Is New Delegate Set
+    ConsensusContainer -> transition_epoch : 
+    transition_epoch -> transition_net : OnConnectionAccepted
+    
+    participant ConsensusNetIO
+    create ConsensusNetIO
+    transition_net -> ConsensusNetIO
+    activate ConsensusNetIO
+    
+    transition_net -> transition_consensus : BindIOChannel(ConsensusNetIO)
+    note left : this is done for every ConsensusManager type
+    
+    participant ConsensusConnection
+    create ConsensusConnection
+    transition_consensus -> ConsensusConnection : create and bind to newly created ConsensusNetIO
+    activate ConsensusConnection
+    
+else
+    ConsensusContainer -> current_epoch 
+    note right: most likely a reconnection
+    current_epoch -> current_net : OnConnectionAccepted 
+    note right: create connection objects etc as\nEpochManager:transition_epoch did above
+end
+@enduml
+
+: Bind socket to ConsensusNetIOManager/ConsensusNetIO/ConsensusManager/ConsensusConnection
+: Bind socket to ConsensusNetIOManager/ConsensusNetIO/ConsensusManager/ConsensusConnection

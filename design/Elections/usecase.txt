@@ -1,0 +1,16 @@
+@startuml
+
+
+actor RegularAccount
+actor Representative
+(Consensus)
+left to right direction
+Representative --> (Consensus) : ElectionVote
+Representative --> (Consensus) : Announce/RenounceCandidacy
+Representative --> (Consensus) : StopRepresenting
+
+
+RegularAccount --> (Consensus) : StartRepresenting
+RegularAccount --> (Consensus) : AnnounceCandidacy
+
+@enduml

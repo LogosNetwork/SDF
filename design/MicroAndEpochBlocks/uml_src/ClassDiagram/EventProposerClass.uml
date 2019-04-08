@@ -1,0 +1,11 @@
+@startuml
+
+EventProposer : logos::alarm alarm
+EventProposer : ConsensusContainer consensus 
+
+EventProposer : Start()
+EventProposer : ProposeMicroBlock()
+EventProposer : ProposeTransition()
+EventProposer : ProposeEpoch()
+
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+User << bootstrapping node >>
+:Peer node: as ValidateAndApply << server >>
+'(Start) << Initiate Bootstrapping >>
+(Validate And Apply, write to database) as (Use) <<  Validator >>
+(Send blocks to bootstrapping node) as (Respond) << blocks sent >>
+'User -> (Start)
+User --> (Use)
+
+ValidateAndApply --> (Respond)
+Respond --> (User)
+
+@enduml

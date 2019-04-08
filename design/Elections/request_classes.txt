@@ -1,0 +1,8 @@
+@startuml
+Request <|-- ElectionVote
+Request <|-- AnnounceCandidacy
+Request <|-- RenounceCandidacy
+Request <|-- StartRepresenting
+Request <|-- StopRepresenting
+Request <|-- ChangeRepresentative
+@enduml

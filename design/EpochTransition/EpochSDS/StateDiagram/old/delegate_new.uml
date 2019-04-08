@@ -1,0 +1,48 @@
+
+@startuml
+
+Title Delegate-New_i
+
+[*] --> MESSAGE_RECEIVED : clock == Epoch-transition-start-time_i
+
+State MESSAGE_RECEIVED{
+	MESSAGE_RECEIVED :	As defined in the delegate overview diagram, with an additional state "TRANSFER"
+	MESSAGE_RECEIVED --> TRANSFER : received valid pre-prepare with e#_{i-1}\nand clock < Epoch-transition-end-time_i
+		
+	State TRANSFER {
+		TRANSFER : for each transaction request,
+		TRANSFER --> PRIMARY_CONSENSUS 	
+		TRANSFER --> PRIMARY_CONSENSUS
+		TRANSFER --> PRIMARY_CONSENSUS
+	}
+	note right of TRANSFER 
+		More like an action diagram
+	end note
+	
+	State PRIMARY_CONSENSUS{
+		PRIMARY_CONSENSUS : as defined in the primary consensus diagram 
+	}	
+}
+
+@enduml
+
+note "TBD, DELETE this diagram! it won't be needed if we forward requests in the pre-prepare individually" as N2
+note "Clock-diff-max: the maximum clock difference allowed among delegates." as N2
+note "Epoch-start-time_i: the starting time of the epoch_i." as N3
+note "Epoch-transition-period_i: [Epoch-start-time_i - Clock-diff-max, Epoch-start-time_i + Clock-diff-max]" as N4
+note "Epoch-transition-start-time_i: Epoch-start-time_i - Clock-diff-max" as N5
+note "Epoch-transition-end-time_i: Epoch-start-time_i + Clock-diff-max" as N6
+note "Delegate_epoch_i: a delegate of epoch_i." as N7
+note "Delegate-new_epoch_i: a node added to the set of delegates at the beginning of epoch_i" as N8
+note "Delegate-retired_epoch_i: a delegate of epoch_{i-1}, but not longer in epoch_i. " as N9
+note "Delegate-existing_epoch_i: (TODO better name) the set of delegate_epoch_i - the set of delegates-new_epoch_i." as N10
+note "E#_i: epoch number i in consensus messages" as N11
+
+As a delegate-new_epoch_i, the core software shall start proposing pre-prepares 
+only after epoch-transition-start-time_i according to its local clock.
+
+As a delegate-new_epoch_i, the core software shall use e#_i in its pre-prepare messages.
+
+As a delegate-new_epoch_i, receiving a pre-prepare message with e#_{i-1}, 
+the the core software shall queue the transactions listed in the batch block into its primary waiting list 
+if the node is the first primary of the transactions in epoch_i.

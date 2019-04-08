@@ -1,0 +1,103 @@
+@startuml
+
+autonumber
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+actor "Bob\n(Token User)" as tu
+actor "Client\n(Token Issuer/Controller)" as ti
+collections "Delegates" as d
+database "Whitelist Database" as wl
+note right of wl
+    //MyCoin// Whitelist:
+        Tom's Account
+        Fred's Account
+        Other Accounts...
+end note
+database "Account Database" as db
+note right of db
+    Bob's Account:
+        Total Balance: xxx
+        Other Fields...
+end note
+
+tu -> ti : Apply to be whitelisted for  //MyCoin//
+note left
+    This step in the whitelisting process is facillicated
+    by the token issuer and is not handled by Logos Network
+    software.
+end note
+
+ti -> ti : Validate Bob's application
+
+ti -> d : Send command to Add Bob's account to the whitelist
+d -> d : Validate command
+d -> wl : Add Bob's account to the //MyCoin// whitelist
+note right
+    //MyCoin// Whitelist:
+        Toms Account
+        Fred's Account
+        Other Accounts...
+        Bob's Account
+end note
+
+tu -> ti : Request to receive //MyCoin// tokens
+note left of tu
+    The request to receive //MyCoin// tokens is facillicated
+    by the token issuer and is not handled by the Logos Network.
+end note
+
+note left of tu
+    Bob could have also requested to receive his initial token
+    sum from another user who already has a balance of   //MyCoin//.
+    The initial send doesn't have to originate from the token
+    account.
+end note
+
+ti -> ti : Accept Bob's request
+
+ti -> d : Submit //Send Token// request to send //MyCoin//\n\
+tokens to Bob's account.
+
+group Request Validation
+    d -> wl : Confirm that Bob's account is whitelisted\nand able to receive\
+ //MyCoin// tokens
+    d -> d : Other validation steps...
+end
+d -> wl : Remove Bob's account from the centralized whitelist
+note right
+    //MyCoin// Whitelist:
+        Toms Account
+        Fred's Account
+        Other Accounts...
+end note
+
+d -> db : Add //MyCoin// to Bob's account\nin the databse
+note left
+    Once the //MyCoin// entry is added to Bob's account,
+    the account is implicitly whitelisted and no longer
+    needs to be stored in the centralized whitelist.
+end note
+note right of db
+Bob's Account:
+    Total Balance: xxx
+    Other Fields...
+    //MyCoin// Account:
+        Balance: 0
+end note
+
+d -> db : Update Bob's //MyCoin// balance
+note right of db
+Bob's Account:
+    Total Balance: xxx
+    Other Fields...
+    //MyCoin// Account:
+        Balance: 100
+end note
+
+note left of d
+    At this point Bob has an active balance of  //MyCoin//
+    tokens and can initiate transactions with other users.
+end note
+@enduml

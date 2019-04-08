@@ -1,0 +1,39 @@
+@startuml
+
+Title Delegate Overview
+
+[*] --> MESSAGE_RECEIVED
+
+State MESSAGE_RECEIVED{
+	MESSAGE_RECEIVED : Parse the data
+	MESSAGE_RECEIVED --> FINISHED : message about requests or blocks\n in a previous post-commit
+	MESSAGE_RECEIVED --> CONSENSUS : message about requests or blocks\n not in previous post-commits	
+	
+	FINISHED : reply with a post-commit\nunless the incoming message is a post-commit
+	
+	State CONSENSUS {
+		note "Other messages for \nan ongoing consensus session\nwill be handled depending on\nthe state of the consensus" as N1 
+		CONSENSUS --> BACKUP_CONSENSUS : pre-prepare
+		CONSENSUS --> PRIMARY_CONSENSUS : request
+		CONSENSUS --> POST_COMMIT_RECEIVED : post-commit
+
+		State PRIMARY_CONSENSUS{
+			PRIMARY_CONSENSUS : a session is started when receiving a request
+			PRIMARY_CONSENSUS : note that every request has a primary which is determined by\nthe prev-hash in the request. If the local node is not the primary,\nit will queue the request in its secondary list, potentially processing it later.
+			PRIMARY_CONSENSUS : see PRIMARY_CONSENSUS diagram for detail
+		}
+		
+		State BACKUP_CONSENSUS {
+			BACKUP_CONSENSUS : a session is started when receiving a pre-prepare
+			BACKUP_CONSENSUS : see BACKUP_CONSENSUS diagram for detail		    
+		}
+		
+		State POST_COMMIT_RECEIVED{
+			POST_COMMIT_RECEIVED : verify the post-commit message and
+			POST_COMMIT_RECEIVED : stop the on-going CONSENSUS session
+			POST_COMMIT_RECEIVED : clean up request waiting lists
+			POST_COMMIT_RECEIVED : update local DB, account balance, last hash etc
+		} 		
+	}	
+}
+@enduml

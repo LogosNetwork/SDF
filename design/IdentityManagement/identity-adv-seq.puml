@@ -1,0 +1,54 @@
+
+@startuml
+
+activate node
+activate DelegateIdentityManager
+activate ConsensusP2pOutput
+activate ConsensusContainer
+
+[o-> node : on node start up
+group AdvertCheck
+node -> DelegateIdentityManager : IdentifyDelegates()
+
+alt delegate in current or next epoch and start up
+    DelegateIdentityManager -> ConsensusP2pOutput : Advertise(),\nAdvertiseTxAcceptor()
+end
+
+alt delegate in next epoch
+    DelegateIdentityManager -> DelegateIdentityManager : ScheduleAdvert():\nset timer for 60 min and 30 min\nbefore next epoch start
+    ...
+    [o->DelegateIdentityManager : Advert()
+    DelegateIdentityManager -> ConsensusP2pOutput : Advertise(),\nAdvertiseTxAcceptor()
+end
+end AdvertCheck
+
+...
+
+ConsensusContainer -> DelegateIdentityManager : OnEpochTransitionEnd();
+DelegateIdentityManager -> DelegateIdentityManager : ** AdvertCheck **
+
+...
+
+[o-> DelegateIdentityManager : OnTxAcceptorAdded()
+DelegateIdentityManager -> DelegateIdentityManager : UpdateTxAcceptorAddressDB()
+alt if delegate in current epoch
+    DelegateIdentityManager -> ConsensusP2pOutput : AdvertiseTxAcceptor()
+end
+
+...
+
+[o-> DelegateIdentityManager : OnTxAcceptorDeleted()
+alt if delegate in current epoch
+    DelegateIdentityManager -> ConsensusP2pOutput : AdvertiseTxAcceptor(delete)
+end
+DelegateIdentityManager -> DelegateIdentityManager : DeleteTxAcceptorAddressDB()
+
+...
+
+[o-> DelegateIdentityManager : Recall
+DelegateIdentityManager -> DelegateIdentityManager : IdentifyDelegates()
+alt delegate in next epoch
+    DelegateIdentityManager -> ConsensusP2pOutput : Advertise(),\nAdvertiseTxAcceptor()
+end
+
+@enduml

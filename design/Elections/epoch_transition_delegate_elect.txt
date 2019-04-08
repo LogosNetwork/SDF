@@ -1,0 +1,16 @@
+@startuml
+center header
+<font size="24" color=black>Delegate Elect and Epoch Transition</font>
+endheader
+
+collections "Next Epoch Delegates" as Delegates
+actor "Delegate Elect" as DelegateElect
+collections "P2P (All nodes)" as P2P
+
+group epoch 0
+P2P -> DelegateElect : Propagate epoch block with next epoch's delegates
+DelegateElect -> Delegates : connect to peers
+Delegates -> DelegateElect : connect to peers
+end
+
+@enduml

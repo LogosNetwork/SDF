@@ -1,0 +1,27 @@
+@startuml
+
+autonumber
+
+actor Client
+entity "Primary Delegate" as pd
+collections "Backup Delegates" as bd
+
+Client -> pd : Submit transaction request
+pd -> pd : Validate request
+
+pd -> bd : Send signed pre-prepare message
+bd -> bd : Validate pre-prepare message
+bd -> pd : Send signed prepare message
+pd -> pd : Validate prepare messages
+pd -> pd : Aggregate signatures from backups
+
+pd -> bd : Send signed post-prepare message
+bd -> bd : Validate post-prepare message
+bd -> pd : Send signed commit message
+pd -> pd : Validate commit messages
+pd -> pd : Aggregate signatures from backups
+
+pd -> bd : Send signed post-comit message
+pd -> Client : Send signed post-comit message
+
+@enduml

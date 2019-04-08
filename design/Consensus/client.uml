@@ -1,0 +1,31 @@
+@startuml
+
+Title Client
+
+State SEND {
+	[*] --> CREATE_REQUEST
+	
+	CREATE_REQUEST --> REPORT_ERROR : bad request
+	CREATE_REQUEST : verify the request, e.g. account balance >= X 
+	CREATE_REQUEST : compute POW
+	CREATE_REQUEST : create a request message and sign it
+	CREATE_REQUEST : initialize the retry counter to zero
+	CREATE_REQUEST --> SEND_REQUEST
+	
+	SEND_REQUEST : compute the primary index using prev-hash and retry counter\n(e.g., (prev-hash + retry counter) % number of delegates) 
+	SEND_REQUEST : send the request to the primary	
+	SEND_REQUEST : increase the retry counter by one
+	SEND_REQUEST : start a SEND timer
+	SEND_REQUEST --> SEND_WAIT
+	
+	SEND_WAIT --> SEND_TIMEOUT : timer expired
+	SEND_WAIT --> DONE : received valid post commit message
+	SEND_WAIT --> SEND_WAIT : received invalid post commit message
+	
+	SEND_TIMEOUT --> REPORT_ERROR : retry_counter == MAX_RETRY	
+	SEND_TIMEOUT --> SEND_REQUEST : retry counter < MAX_RETRY 
+	
+	DONE : update local DB, account balance, last hash etc. 
+	REPORT_ERROR :  	
+}
+@enduml

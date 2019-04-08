@@ -1,0 +1,30 @@
+@startuml
+
+Title Bootstrap
+
+State Request_Tips {
+	[*] --> CREATE_REQUEST
+
+	CREATE_REQUEST --> REPORT_ERROR : network error
+	CREATE_REQUEST : Issue request to tips server via tips client
+	CREATE_REQUEST : Wait for future to be set to false
+    CREATE_REQUEST : add_request is called while tips are received
+	CREATE_REQUEST --> SEND_BULK_PULL_REQUEST
+
+	SEND_BULK_PULL_REQUEST : take request from request queue
+	SEND_BULK_PULL_REQUEST : process the request as a bulk_pull_client request
+	SEND_BULK_PULL_REQUEST --> RECV_BULK_PULL_RESPONSE
+
+	RECV_BULK_PULL_RESPONSE--> SEND_TIMEOUT : timer expired
+	RECV_BULK_PULL_RESPONSE--> DONE : received valid not_a_block after all blocks transferred
+	RECV_BULK_PULL_RESPONSE--> RECV_BULK_PULL_RESPONSE : received valid block
+	RECV_BULK_PULL_RESPONSE--> RECV_BULK_PULL_RESPONSE : received invalid block
+
+	SEND_TIMEOUT --> REPORT_ERROR
+
+	DONE : update database
+    DONE-->CREATE_REQUEST
+
+	REPORT_ERROR : Log error message
+}
+@enduml

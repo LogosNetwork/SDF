@@ -1,0 +1,41 @@
+@startuml
+'left to right direction
+'skinparam packageStyle rectangle
+actor network
+actor localDB
+
+rectangle MicroBlockConsensus{
+actor EventProposer
+
+rectangle MicroBlockConsensus_Primary {
+  EventProposer --> (Init MicroBlock_PrimaryConsensus) 
+  'localDB -left- (Init MicroBlock_PrimaryConsensus) 
+  (Init MicroBlock_PrimaryConsensus)--> network
+  
+  'network --> (Finish MicroBlock_PrimaryConsensus)
+  '(Finish MicroBlock_PrimaryConsensus) --> network 
+  'localDB -left- 
+  (Init MicroBlock_PrimaryConsensus) ..> (Finish MicroBlock_PrimaryConsensus) : 2 rounds of messages:\nenough prepares and\nenough commits received  
+  
+}
+
+rectangle MicroBlockConsensus_Backup {
+  network --> (Init MicroBlock_BackupConsensus) : pre-prepare 
+  'localDB -left- (Init MicroBlock_BackupConsensus) 
+  '(Init MicroBlock_BackupConsensus)--> network
+  
+  'network --> (Finish MicroBlock_BackupConsensus)
+  '(Finish MicroBlock_BackupConsensus) --> network 
+  'localDB -left- 
+  (Init MicroBlock_BackupConsensus) ..> (Finish MicroBlock_BackupConsensus) : 2 rounds of messages:\npost-prepare and\npost-commit received 
+}
+
+'MicroBlockConsensus_Primary -- network
+'MicroBlockConsensus_Backup -- network
+
+MicroBlockConsensus_Primary -- localDB
+MicroBlockConsensus_Backup -- localDB
+
+}
+
+@enduml

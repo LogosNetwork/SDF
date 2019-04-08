@@ -1,0 +1,19 @@
+# PlantUML Editor
+
+1. select template
+2. write uml diagram
+
+@startuml
+
+left to right direction
+
+actor Client
+actor "Remote Delegate" as RD
+
+rectangle "Consensus Module" {
+    Client --> (ConsensusManager) : Send a transaction request
+    (ConsensusConnection) <-- RD : Send a PrePrepare
+    (PrimaryDelegate) --> RD : Send a PrePrepare
+}
+
+@enduml
