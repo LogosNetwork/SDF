@@ -147,12 +147,13 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 | --- | -------------| ----------------- | --- | 
 | MessagePrequel | 8 | Message header (see below) |  1 |
 | Primary | 1 | Primary delegate's index |  2 |
-| Epoch Number  | 4 | Global epoch number |  3 |
-| Sequence Number | 4 | Starting from 0 at the beginning of the epoch | 4 |
-| Timestamp | 8 | UTC timestamp (millisecond)| 5 |
-| Previous | 32 | Hash of the Previous Consensus Block; <br/>Reference the NULL block if this is the first BatchStateBlock of this delegate. <br/> Reference the genesis Epochblock if this is the first Epochblock. <br/> Reference the Microblock in the genesis Epochblock if this is the first Microblock. | 6 |
+| Epoch Number  | 4 | Epoch number to which the block belongs |  3 |
+| Delegate Epoch Number  | 4 |  Epoch number of the delegates running the consensus session |4 |
+| Sequence Number | 4 | Starting from 0 at the beginning of the epoch | 5 |
+| Timestamp | 8 | UTC timestamp (millisecond)| 6 |
+| Previous | 32 | Hash of the Previous Consensus Block; <br/>Reference the NULL block if this is the first BatchStateBlock of this delegate. <br/> Reference the genesis Epochblock if this is the first Epochblock. <br/> Reference the Microblock in the genesis Epochblock if this is the first Microblock. | 7 |
 | Signature | 32 | Primary's BLS signature | - |
-| Consensus Block | Sizeof(Consensus Block) | A multipurpose field. It can be a Batch State Block, a Microblock, or an Epoch. (see below) <br/> The type of the block is in the MessagePrequel.| 7 |
+| Consensus Block | Sizeof(Consensus Block) | A multipurpose field. It can be a Batch State Block, a Microblock, or an Epoch. (see below) <br/> The type of the block is in the MessagePrequel.| 8 |
 | Participation Map of Prepare | 8 | Bitmap of the delegates that participated in prepare|  - |
 | Aggregated Signature| 32 | BLS aggregated signature of prepare | - |
 | Participation Map of Commit | 8 | Bitmap of the delegates that participated in commit|  - |
@@ -205,20 +206,26 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 
 | Field Name |Size| Description |
 | --- | -------------| ----------------- |
-| tip | 32 | Current tip of the batch block. One per `(delegate_id, epoch_number)` combination (although at most only the current epoch and previous are stored in database). |
+| tip | 40 | Current Tip of the request block. One per `(delegate_id, epoch_number)` combination (although at most only the current epoch and previous are stored in database). |
 
 ### `micro_block_tip_db`
 
 | Field Name |Size| Description |
 | --- | -------------| ----------------- |
-| tip | 32 | Current microblock's hash tip. Only one in the network. |
+| tip | 40 | Current microblock's Tip. Only one in the network. |
 
 ### `epoch_tip_db`
 
 | Field Name |Size| Description |
 | --- | -------------| ----------------- |
-| tip | 32 | Current epoch block's hash tip. Only one in the network. |
+| tip | 40 | Current epoch block's Tip. Only one in the network. |
 
+#### tip
+| Field Name |Size | Description |Hash Sequence |
+| --- | -------------| ----------------- | ---|
+| epoch number| 4 | epoch number of the block | 1 |
+| sequence number| 4 | sequence number of the block | 2 |
+| digest | 32 | hash of the block | 3 |
 
 ### `representative_db`
 
