@@ -42,41 +42,7 @@ Consensus Block Type is included in every consensus protocol message. It is used
 
 ## Transaction Request
 
-### Single State Block
-
-The *single state* block is a single unit of operation that can be performed on an account. The table below depicts the format of a state block:
-
-| Field Name |Size (byte) | Description |
-| --- | -------------| ----------------- |
-| Account  | 32 | Account address | 
-| Previous | 32 | Previous block hash on account| 
-| Sequence Number  | 4 | Number of sends, increment only | 
-| Request Type | 1 | Request type |
-| Count | 2 | Number of requests, [1-8]| 
-| Transactions[Count]   | sizeof(Transaction) * Count | Array of transactions |
-| Transaction Fee | 16 | Transaction Fee |
-| Signature | 64 | EdDSA signature |
-| Work      | 8  |Proof of Work Nonce |
-
-Note that Signature = Sign(Hash(Account, Previous, Sequence Number, Request Type, Transaction Fee, Count, Transactions))
-Note that the "Work" field is not covered by the signature. This field is sent from the client to the primary delegate. After verifying it, the primary does not send it to the backup delegates.
-
-#### Request Type
-| Request Type | Value | 
-| --- | ----------------- | 
-| Send | 0 | 
-| Change | 1 |
-
-Note that open and receive transactions are inferred from the send transaction request. 
-[//]: # "Change requests must have a value of 0 to indicate it is a change request."
-
-#### Transaction
-| Field Name |Size (Byte)| Description |
-| --- | -------------| ----------------- |
-| Target Address | 32 | Transaction target address |
-| Amount | 16 | Transaction Amount.|
-
-Note that the Amount is 0 if the request type is "Change" representative.
+Please see the Request\_IDD for detail.
 
 ## Consensus Messages
 
@@ -87,7 +53,8 @@ A primary delegate proposes a pre-prepare message to start a consensus session, 
 | --- | -------------| ----------------- |
 | Header | 8 | Message header|
 | Primary | 1 | Primary delegate's index |
-| Epoch Number  | 4 | Global epoch number |
+| Epoch Number  | 4 | Epoch number to which the block belongs |
+| Delegate Epoch Number  | 4 | Epoch number of the delegates running the consensus session |
 | Sequence Number | 4 | Starting from 0 at the beginning of the epoch |
 | Timestamp | 8 | UTC timestamp (millisecond)|
 | Previous | 32 | Hash of the Previous Consensus Batch; <br/>Reference the NULL block if this is the first Batch State Block of this delegate. <br/> Reference the genesis Epochblock if this is the first Epochblock. <br/> Reference the Microblock in the genesis Epochblock if this is the first Microblock. |
@@ -100,25 +67,25 @@ Note that Signature = Sign(Pre-Prepare Hash), where the pre-prepare hash is depi
 
 | Field Name |Size| Description |
 | --- | -------------| ----------------- |
-| Pre-Prepare Hash | 32 | Hash(Header.Version, Primary, Epoch Number, Sequence Number, Timestamp, Previous, Consensus Block)|
+| Pre-Prepare Hash | 32 | Hash(Header.Version, Primary, Epoch Number, Delegate Epoch Number, Sequence Number, Timestamp, Previous, Consensus Block)|
 
-#### Batch State Block
-The *batch state* block is one or more single state blocks with additional metadata. 
+#### Request Block
+The *Request* block is one or more requests with additional metadata. 
 
 | Field Name |Size| Description |
 | --- | -------------| ----------------- |
-| Count  | 2 | The number of Single State Blocks included in this batch block |
-| Single State Block Hashes[Count] | 32 * Count | hashes of Single State Blocks |
-| Appendix | sum of all Single State Blocks | Single State Blocks included in this batch |
+| Count  | 2 | The number of Requests included in this block |
+| Request Hashes[Count] | 32 * Count | hashes of Requests |
+| Appendix | sum of all Requests | Requests included in this batch |
 
-Note that the Single State Blocks are attached to the pre-prepare message as the Appendix field. The PoW field should not be sent. 
+Note that the Requests are attached to the pre-prepare message as the Appendix field. The PoW field should not be sent. 
 
-#### Batch State Block Tip
+#### Request Block Tip
 Current tip of the batch block for each delegate. Keyed by the delegate's number in this epoch.
 
 | Field Name |Size| Description |
 | --- | -------------| ----------------- |
-| Batch block tip | 32 | Current tip of the batch block |
+| Request block tip | 32 | Current tip of the Request block |
 
 #### Micro-Block
 
@@ -126,12 +93,9 @@ Micro-block is created periodically at time T = Epoch / N, where N is the desire
 
 | Field Name |Size (Byte) | Description |
 | --- | -------------| ----------------- |
-[//]: # "| Merkle Tree Root | 32 | Merkle tree root of the batch blocks included in this micro block|"
-| Number of Batch Blocks| 4 | Number of batch blocks included in the microblock |
+| Number of Request Blocks| 4 | Number of Request blocks included in the microblock |
 | Last Micro Block Flag | 1 | Last Micro block flat [0|1] |
 | Batch Block Tips [32] | 32*32 | Tip of the batch block chain for each delegate|
-
-[//]: # "Merkle tree root construction: Merkle tree is constructed from BatchStateBlock hashes. BatchStateBlock's are globally ordered by design within each delegate. Therefore, all BatchStateBlock's included in the MicroBlock can be viewed as one globally ordered logical array of concatenated delegates BatchStateBlock chain, ordered by delegates. To select the BatchStateBlock's included in the Merkle Tree, the algorithm traverses each delegate's BatchStateBlock's chain starting with the delegate's current BatchStateBlock's tip and ending when it reaches the BatchStateBlock's tip included in the previous MicroBlock.  If the BatchStateBlock's timestamp is less than the previous MicroBlock timestamp plus MicroBlock_interval (currently 10 minutes), then the BatchStateBlock is included in the MicroBlock. Note, that the timestamp of the last genesis MicroBlock is 0. Therefore when constructing the very first MicroBlock, the oldest timestamp of all existing BatchStateBlock's is found first. Then this timestamp is used in place of the previous MicroBlock timestamp and the algorithm proceeds as described above. Once hashes of all BatchStateBlock's that should be included in the MicroBlock are collected, the Merkle Tree Root is calculated."
 
 #### Micro-Block tip
 
