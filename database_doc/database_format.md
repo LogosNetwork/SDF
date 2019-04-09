@@ -20,7 +20,8 @@
 | `remove_candidates_db` | 0 | 1 | `account_address` | 32 | The candidates to remove from candidacy_db on epoch transition. This db uses duplicate keys |
 | `remove_reps_db` | 0 | 1 | `account_address` | 32 | The representatives to remove from representative_db on epoch transition. This db uses duplicate keys |
 | `voting_power_db` | `account_address` | 32 | `voting_power_info` | 100 | Information about a representative's voting power |
-| `rep_rewards_db` | `account_address` || `epoch_number` | 36 | `rep_rewards_info` | Information about a rep's levy_percentage, stake, locked proxy and rewards per epoch |
+| `rep_rewards_db` | `account_address` + `epoch_number` | 36 | `rep_rewards_info` | Information about a rep's levy_percentage, stake, locked proxy and rewards per epoch |
+| `liability_db` | `account_address` | 32 | `liability` | 88 | Liabilities per representative, where rep is target of liability. This db uses duplicate keys | 
 
 
 
@@ -29,6 +30,8 @@ Note all the sizes are in bytes.
 Note whenever a field is a 1 byte bool flag, 0 represents false and 1 represents true
 
 Note remove_candidates_db and remove_reps_db use duplicate keys: every account address has key 0, but there are many such pairs.
+
+Note liability_db uses duplicate keys. There may be many liabilities associated with a given representative. 
 
 ## Database Details
 
@@ -348,7 +351,6 @@ and all accounts that had previously chosen this account as a rep choose a new r
 | outstanding_reward | 16 | Amount of rewards left to be claimed |
 
 Note, rep_rewards_db is keyed by concatenating representative account address with epoch number.
-This record is populated when a rep votes during a given epoch, though the outstanding reward will start at 0.
+This record is populated when a rep votes during a given epoch, though the outstanding reward will be 0 at that time.
 The first time either this rep or an account proxying to this rep claims a reward, the outstanding reward balance will be set.
 The record can be pruned when outstanding_reward goes to 0 again.
-
