@@ -19,6 +19,7 @@
 | `leading_candidacy_db` | `account_address` | 32 | `candidacy_info` | 100 | The current leaders of the election (top 8) | 
 | `remove_candidates_db` | 0 | 1 | `account_address` | 32 | The candidates to remove from candidacy_db on epoch transition. This db uses duplicate keys |
 | `remove_reps_db` | 0 | 1 | `account_address` | 32 | The representatives to remove from representative_db on epoch transition. This db uses duplicate keys |
+| `voting_power_db` | `account_address` | 32 | `voting_power_info` | 100 | Information about a representative's voting power |
 
 
 
@@ -60,7 +61,7 @@ If the account type is native, the account include the following addtional infor
 
 Note, stake_head is a hash to a request, which could be StartRepresenting, StopRepresenting,
 AnnounceCandidacy, RenounceCandidacy, Proxy, Stake or Unstake, as all of these requests
-affect the the amount staked to self or the amount of funds locked proxied.
+affect the the amount staked to self or the amount of funds locked proxied. See IDD for details.
 
 Note, the size of stake and thawing depends on the number of liabilities associated
 with those staked or thawing funds. 
@@ -316,3 +317,21 @@ Note, leading_candidacy_db is simply the current top 8 candidates from the candi
 | Value Item | Size | Description |
 | --- | --- | --- |
 | account_address | 32 | account address of representative to be removed |
+
+### `voting_power_db`
+| Value Item | Size | Description |
+| --- | --- | --- |
+| current | 48 | voting_power_snapshot for the current epoch |
+| next | 48 | voting_power_snapshot for the next epoch |
+| epoch_modified | 4 | which epoch this record was most recently modified |
+
+Note, current is used to weight votes, and next is continuously modified during the epoch.
+On epoch start, current is replaced with the value of next. See staking/elections design doc
+for more details.
+
+##### `voting_power_snapshot`
+| Value Item | Size | Description |
+| --- | --- | --- |
+| locked_proxied_amount | 16 | Amount of funds locked proxied to this representative |
+| unlocked_proxied_amount | 16 | Amount of funds unlocked proxied to this representative |
+| self_stake_amount | 16 | Amount of funds this representative has staked to themselves |
