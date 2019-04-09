@@ -48,10 +48,60 @@ If the account type is native, the account include the following addtional infor
 
 | Value Item | Size | Description |
 | --- | --- | --- |
-| rep_block | 32 | block where account most recently changed representative | 
+| stake_head | 32 | hash of request where account most recently changed the amount staked or locked proxied| 
 | open_block | 32 | original send block that opened this account | 
 | token_count | 2 | number of different kinds of tokens |
 | token_entries | token_count * 50 | Array of token_entries, see the table below |
+| available_balance | 16 | amount of Logos this account is able to spend. Equal to balance - total staked and thawing |
+| stake | 18+ | Current active stake, see table below |
+| thawing_count | 1 | Number of currently thawing funds |
+| thawing | thawing_count * 57+ | Array of thawing funds, see table below |
+| total_liabilities_count | 1 | Number of current liabilities for this account |
+
+Note, stake_head is a hash to a request, which could be StartRepresenting, StopRepresenting,
+AnnounceCandidacy, RenounceCandidacy, Proxy, Stake or Unstake, as all of these requests
+affect the the amount staked to self or the amount of funds locked proxied.
+
+Note, the size of stake and thawing depends on the number of liabilities associated
+with those staked or thawing funds. 
+
+Note, total_liabilities_count includes liabilities for both staked and thawing funds. However,
+total_liabilities_count may be greater than actual liabilities if some liabilities have
+expired. See elections/staking design doc for more details.
+
+##### stake
+| Value Item | Size | Description |
+| --- | --- | --- |
+| is_proxy | 1 | boolean flag, set to true if stake is proxied, false if stake is self stake |
+| amount | 16 | amount of funds staked |
+| liabilities_count | 1 | number of liabilities associated with this stake |
+| liabilities | liabilities_count * 88 | Array of liabilities, see table below. Sorted in decreasing order of liability expiration |
+
+##### thawing
+| Value Item | Size | Description |
+| --- | --- | --- |
+| target | 32 | Account Address that funds were staked to prior to thawing |
+| amount | 16 | Amount of funds thawing |
+| expiration | 8 | UTC Timestamp (milliseconds) of when funds become available |
+| liabilities_count | 1 | number of liabilities associated with this stake |
+| liabilities | liabilities_count * 88 | Array of liabilities, see table below. Sorted in decreasing order of liability expiration |
+
+Note, an expiration of 0 means those funds are frozen. Frozen funds are funds
+that were unstaked by a delegate or candidate that was elected. Frozen funds
+will have their expiration set when the delegate finishes their current term.
+
+##### liability
+| Value Item | Size | Description |
+| --- | --- | --- |
+| target | 32 | Account Address that funds are liable for |
+| source | 32 | Account Address that owns the funds |
+| amount | 16 | Amount of funds liable for |
+| expiration | 8 | UTC Timestamp (milliseconds) of when liability expires |
+
+Note, an expiration of 0 means the liability has no expiration 
+Currently staked funds are liable for the account those funds are staked to, and
+a liability expiration is not set until those funds are staked to a different account
+or begin thawing.
 
 ##### token_entry
 | Value Item | Size | Description |
