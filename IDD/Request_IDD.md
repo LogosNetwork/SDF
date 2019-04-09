@@ -22,7 +22,7 @@ Note that Signature = Sign(Hash). Also note that the "Work" field is not covered
 | Request Type | Code | Description |
 | --- | ----------------- | ----------------- |
 | Native_Send | 0 | Send multiple transaction from the native Logos account |
-| Native_Change  | 1 | Change the representative of the native Logos account |
+| Proxy  | 1 | Change the representative of the native Logos account, and/or set amount of Logos locked proxied |
 | Token_Issuance | 2 | Issue a new token |
 | Token_Issuance_Addition | 3 | Issue more of an existing token |
 | Token_Change_Setting | 4 | Change one token account setting |
@@ -42,6 +42,8 @@ Note that Signature = Sign(Hash). Also note that the "Work" field is not covered
 | Renounce_Candidacy | 18 | Undeclare delegate candidacy for upcoming elections |
 | Start_Representing | 19 | Become Representative on the network |
 | Stop_Representing  | 20 | Stop being a representative on the network |
+| Stake | 21 | Set amount staked to self |
+| Unstake | 22 | Decrease amount staked to self |
 
 Note that open and receive transactions of accounts are inferred from the send (any type of send) transaction request.
 
@@ -248,12 +250,14 @@ Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater 
 #### Start_Representing
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Stake | 16 | Amount of logos to stake as representative | Yes |
+| Stake | 16 | Amount of logos to self stake as representative (optional, may have existing stake) | Yes |
 | Epoch_Number | 4 | Epoch number request was issued in | Yes |
+| Proxy_Previous | 32 | Hash of previous Proxy or StartRepresenting request issued by origin | Yes |
 
 #### Stop_Representing
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
+| Unstake | 16 | Amount of logos to move to thawing state after executing this request (optional) | Yes |
 | Epoch_Number | 4 | Epoch number request was issued in | Yes |
 
 #### Announce_Candidacy
@@ -267,4 +271,25 @@ Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater 
 #### Renounce_Candidacy
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
+| Unstake | 16 | Amount of logos to move to thawing state after executing this request (optional) | Yes |
+| Epoch_Number | 4 | Epoch number request was issued in | Yes |
+
+#### Stake
+| Field Name |Size (Byte)| Description | Hash |
+| --- | -------------| ----------------- |--|
+| Amount | 16 | Amount of logos to stake to self | Yes |
+| Epoch_Number | 4 | Epoch number request was issued in | Yes |
+
+#### Unstake
+| Field Name |Size (Byte)| Description | Hash |
+| --- | -------------| ----------------- |--|
+| Amount | 16 | Amount of logos to move to thawing state | Yes |
+| Epoch_Number | 4 | Epoch number request was issued in | Yes |
+
+#### Proxy
+| Field Name |Size (Byte)| Description | Hash |
+| --- | -------------| ----------------- |--|
+| Lock_Proxy | 16 | Amount of logos to lock proxy | Yes |
+| Representative | 32 | Account address of chosen representative | Yes |
+| Proxy_Previous | 32 | Hash of previous Proxy or StartRepresenting request issued by origin | Yes |
 | Epoch_Number | 4 | Epoch number request was issued in | Yes |

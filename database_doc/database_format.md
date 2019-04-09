@@ -53,7 +53,7 @@ If the account type is native, the account include the following addtional infor
 
 | Value Item | Size | Description |
 | --- | --- | --- |
-| stake_head | 32 | hash of request where account most recently changed the amount staked or locked proxied| 
+| proxy_head | 32 | hash of request where account most recently changed the amount locked proxied| 
 | open_block | 32 | original send block that opened this account | 
 | token_count | 2 | number of different kinds of tokens |
 | token_entries | token_count * 50 | Array of token_entries, see the table below |
@@ -63,9 +63,8 @@ If the account type is native, the account include the following addtional infor
 | thawing | thawing_count * 57+ | Array of thawing funds, see table below |
 | total_liabilities_count | 1 | Number of current liabilities for this account |
 
-Note, stake_head is a hash to a request, which could be StartRepresenting, StopRepresenting,
-AnnounceCandidacy, RenounceCandidacy, Proxy, Stake or Unstake, as all of these requests
-affect the the amount staked to self or the amount of funds locked proxied. See IDD for details.
+Note, proxy_head is a hash to a request, which could be Proxy or StartRepresenting, as
+these are the two requests that modify locked proxied funds.
 
 Note, the size of stake and thawing depends on the number of liabilities associated
 with those staked or thawing funds. 
