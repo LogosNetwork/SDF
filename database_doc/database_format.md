@@ -20,6 +20,7 @@
 | `remove_candidates_db` | 0 | 1 | `account_address` | 32 | The candidates to remove from candidacy_db on epoch transition. This db uses duplicate keys |
 | `remove_reps_db` | 0 | 1 | `account_address` | 32 | The representatives to remove from representative_db on epoch transition. This db uses duplicate keys |
 | `voting_power_db` | `account_address` | 32 | `voting_power_info` | 100 | Information about a representative's voting power |
+| `rep_rewards_db` | `account_address` || `epoch_number` | 36 | `rep_rewards_info` | Information about a rep's levy_percentage, stake, locked proxy and rewards per epoch |
 
 
 
@@ -329,9 +330,25 @@ Note, current is used to weight votes, and next is continuously modified during 
 On epoch start, current is replaced with the value of next. See staking/elections design doc
 for more details.
 
+Note, a rep is only purged from voting_power_db when that rep stops being a rep,
+and all accounts that had previously chosen this account as a rep choose a new rep.
+
 ##### `voting_power_snapshot`
 | Value Item | Size | Description |
 | --- | --- | --- |
 | locked_proxied_amount | 16 | Amount of funds locked proxied to this representative |
 | unlocked_proxied_amount | 16 | Amount of funds unlocked proxied to this representative |
 | self_stake_amount | 16 | Amount of funds this representative has staked to themselves |
+
+### `rep_rewards_db`
+| Value Item | Size | Description |
+| --- | --- | --- |
+| levy_percentage | 1 | Levy_percentage in effect for rep for given epoch |
+| total_stake | 16 | amount of self stake + amount of locked proxied funds proxied to this rep |
+| outstanding_reward | 16 | Amount of rewards left to be claimed |
+
+Note, rep_rewards_db is keyed by concatenating representative account address with epoch number.
+This record is populated when a rep votes during a given epoch, though the outstanding reward will start at 0.
+The first time either this rep or an account proxying to this rep claims a reward, the outstanding reward balance will be set.
+The record can be pruned when outstanding_reward goes to 0 again.
+
