@@ -19,19 +19,29 @@
 | `leading_candidacy_db` | `account_address` | 32 | `candidacy_info` | 100 | The current leaders of the election (top 8) | 
 | `remove_candidates_db` | 0 | 1 | `account_address` | 32 | The candidates to remove from candidacy_db on epoch transition. This db uses duplicate keys |
 | `remove_reps_db` | 0 | 1 | `account_address` | 32 | The representatives to remove from representative_db on epoch transition. This db uses duplicate keys |
-| `voting_power_db` | `account_address` | 32 | `voting_power_info` | 100 | Information about a representative's voting power |
-| `rep_rewards_db` | `account_address` + `epoch_number` | 36 | `rep_rewards_info` | Information about a rep's levy_percentage, stake, locked proxy and rewards per epoch |
-| `liability_db` | `account_address` | 32 | `liability` | 88 | Liabilities per representative, where rep is target of liability. This db uses duplicate keys | 
+| `voting_power_db` | `account_address` | 32 | `voting_power_info` | 100 | Maps rep account address to info about a representative's voting power |
+| `epoch_rewards_db` | `account_address` + `epoch_number` | 36 | `rep_rewards_info` | Maps (rep account address, epoch number) to info about a rep's levy_percentage, stake, locked proxy and rewards per epoch |
+| `master_liability_db` | `liability_hash`  | 32 | `liability` | 88 | Maps a liability_hash to a liability |
+| `rep_liability_db` | `account_address` | 32 | `liability_hash` | 32 | Maps a rep address to liability_hash. This db uses duplicate keys | 
+| `secondary_liability_db` | `account_address` | 32 | `liability_hash` | 32 | Maps an account address to liability_hash. This db uses duplicate keys |
+| `staking_db`   | `account_address` | 32 | `staked_funds` | 49+ | Maps account address to staked_funds. Funds may be locked proxied or staked to self |
+| `thawing_db`   | `account_address` | 32 | `thawing_funds` | 57+ | Maps account address to thawing_funds. This db uses duplicate keys |
 
 
 
 Note all the sizes are in bytes.
 
-Note whenever a field is a 1 byte bool flag, 0 represents false and 1 represents true
+Note: whenever a field is a 1 byte bool flag, 0 represents false and 1 represents true
 
-Note remove_candidates_db and remove_reps_db use duplicate keys: every account address has key 0, but there are many such pairs.
+Note: remove_candidates_db and remove_reps_db use duplicate keys: every account address has key 0, but there are many such pairs.
 
-Note liability_db uses duplicate keys. There may be many liabilities associated with a given representative. 
+Note: rep_liability_db uses duplicate keys. There may be many liability_hashes associated with a given representative.
+Any liability with hash H and target R adds a corresponding R -> H mapping in rep_liability_db.
+
+Note: thawing_db uses duplicate keys. There may be many sets of thawing funds associated with a given account. However, the thawing funds for a specific account are sorted by expiration time, with the thawing funds expiring the soonest coming first.
+
+Note: liabilities are stored in master_liability_db and hashes of those liabilities are stored in rep_liability_db, secondary_liability_db
+and with any associated staked_funds or thawing_funds.
 
 ## Database Details
 
@@ -53,59 +63,21 @@ If the account type is native, the account include the following addtional infor
 
 | Value Item | Size | Description |
 | --- | --- | --- |
-| proxy_head | 32 | hash of request where account most recently changed the amount locked proxied| 
+| staking_subchain_head | 32 | hash of request where account most recently changed the amount locked proxied or staked| 
 | open_block | 32 | original send block that opened this account | 
 | token_count | 2 | number of different kinds of tokens |
 | token_entries | token_count * 50 | Array of token_entries, see the table below |
-| available_balance | 16 | amount of Logos this account is able to spend. Equal to balance - total staked and thawing |
-| stake | 18+ | Current active stake, see table below |
-| thawing_count | 1 | Number of currently thawing funds |
-| thawing | thawing_count * 57+ | Array of thawing funds, see table below |
-| total_liabilities_count | 1 | Number of current liabilities for this account |
+| available_balance | 16 | amount of Logos this account is able to spend |
 
-Note, proxy_head is a hash to a request, which could be Proxy or StartRepresenting, as
-these are the two requests that modify locked proxied funds.
+Note, staking_subchain_head is the head of a chain of requests issued by this account
+that affect the amount of funds this account has locked proxied or staked to self.
+To calculate amount of funds proxied or staked at any given time in the past, traverse this subchain.
+See IDD for more details. 
 
-Note, the size of stake and thawing depends on the number of liabilities associated
-with those staked or thawing funds. 
+Note: available balance = (balance) - (amount staked, locked proxied and thawing)
 
-Note, total_liabilities_count includes liabilities for both staked and thawing funds. However,
-total_liabilities_count may be greater than actual liabilities if some liabilities have
-expired. See elections/staking design doc for more details.
 
-##### stake
-| Value Item | Size | Description |
-| --- | --- | --- |
-| is_proxy | 1 | boolean flag, set to true if stake is proxied, false if stake is self stake |
-| amount | 16 | amount of funds staked |
-| liabilities_count | 1 | number of liabilities associated with this stake |
-| liabilities | liabilities_count * 88 | Array of liabilities, see table below. Sorted in decreasing order of liability expiration |
 
-##### thawing
-| Value Item | Size | Description |
-| --- | --- | --- |
-| target | 32 | Account Address that funds were staked to prior to thawing |
-| amount | 16 | Amount of funds thawing |
-| expiration | 8 | UTC Timestamp (milliseconds) of when funds become available |
-| liabilities_count | 1 | number of liabilities associated with this stake |
-| liabilities | liabilities_count * 88 | Array of liabilities, see table below. Sorted in decreasing order of liability expiration |
-
-Note, an expiration of 0 means those funds are frozen. Frozen funds are funds
-that were unstaked by a delegate or candidate that was elected. Frozen funds
-will have their expiration set when the delegate finishes their current term.
-
-##### liability
-| Value Item | Size | Description |
-| --- | --- | --- |
-| target | 32 | Account Address that funds are liable for |
-| source | 32 | Account Address that owns the funds |
-| amount | 16 | Amount of funds liable for |
-| expiration | 8 | UTC Timestamp (milliseconds) of when liability expires |
-
-Note, an expiration of 0 means the liability has no expiration 
-Currently staked funds are liable for the account those funds are staked to, and
-a liability expiration is not set until those funds are staked to a different account
-or begin thawing.
 
 ##### token_entry
 | Value Item | Size | Description |
@@ -329,27 +301,59 @@ Note, leading_candidacy_db is simply the current top 8 candidates from the candi
 | epoch_modified | 4 | which epoch this record was most recently modified |
 
 Note, current is used to weight votes, and next is continuously modified during the epoch.
-On epoch start, current is replaced with the value of next. See staking/elections design doc
-for more details.
+The first time this record is modified in a given epoch, current is replaced by next.
+See staking/elections design doc for more details.
 
-Note, a rep is only purged from voting_power_db when that rep stops being a rep,
-and all accounts that had previously chosen this account as a rep choose a new rep.
+Note, a rep is only purged from voting_power_db when that rep's voting power goes to 0.
 
-##### `voting_power_snapshot`
+#### `voting_power_snapshot`
 | Value Item | Size | Description |
 | --- | --- | --- |
 | locked_proxied_amount | 16 | Amount of funds locked proxied to this representative |
 | unlocked_proxied_amount | 16 | Amount of funds unlocked proxied to this representative |
 | self_stake_amount | 16 | Amount of funds this representative has staked to themselves |
 
-### `rep_rewards_db`
+### `epoch_rewards_db`
 | Value Item | Size | Description |
 | --- | --- | --- |
 | levy_percentage | 1 | Levy_percentage in effect for rep for given epoch |
 | total_stake | 16 | amount of self stake + amount of locked proxied funds proxied to this rep |
-| outstanding_reward | 16 | Amount of rewards left to be claimed |
+| remaining_reward | 16 | Amount of rewards left to be claimed |
+| total_reward | 16 | Total rewards before claiming |
 
-Note, rep_rewards_db is keyed by concatenating representative account address with epoch number.
-This record is populated when a rep votes during a given epoch, though the outstanding reward will be 0 at that time.
-The first time either this rep or an account proxying to this rep claims a reward, the outstanding reward balance will be set.
-The record can be pruned when outstanding_reward goes to 0 again.
+Note, epoch_rewards_db is keyed by concatenating representative account address with epoch number.
+
+### staking_db
+| Value Item | Size | Description |
+| --- | --- | --- |
+| target | 32 | AccountAddress that funds are staked/locked proxied to |
+| amount | 16 | amount of funds staked |
+| liability_hash | 32 | Hash of associated liability |
+
+### thawing_db
+| Value Item | Size | Description |
+| --- | --- | --- |
+| expiration | 8 | UTC Timestamp (milliseconds) of when funds become available |
+| target | 32 | Account Address that funds were staked to prior to thawing |
+| amount | 16 | Amount of funds thawing |
+| liability_hash | 32 | Hash of associated liability | 
+
+Note, an expiration of 0 means those funds are frozen. Frozen funds are funds
+that were unstaked by a delegate or candidate that was elected. Frozen funds
+will have their expiration set when the delegate finishes their current term.
+
+Note, using expiration as the first field ensures that thawing_funds per account
+ are sorted in increasing order of expiration
+
+#### liability
+| Value Item | Size | Description | Hash Sequence |
+| --- | --- | --- | --- |
+| target | 32 | Account Address that funds are liable for | 1 |
+| origin | 32 | Account Address that owns the funds | 2 |
+| amount | 16 | Amount of funds liable for | - |
+| expiration | 8 | UTC Timestamp (milliseconds) of when liability expires | 3 |
+
+Note, an expiration of 0 means the liability has no expiration.
+Currently staked funds are liable for the account those funds are staked to, and
+a liability expiration is not set until those funds are staked to a different account
+or begin thawing.
