@@ -42,6 +42,7 @@ Note that Signature = Sign(Hash). Also note that the "Work" field is not covered
 | Renounce_Candidacy | 18 | Undeclare delegate candidacy for upcoming elections |
 | Start_Representing | 19 | Become Representative on the network |
 | Stop_Representing  | 20 | Stop being a representative on the network |
+| Claim_Reward | 21 | Claim all available rewards |
 
 Note that open and receive transactions of accounts are inferred from the send (any type of send) transaction request.
 
@@ -240,7 +241,7 @@ Note that the _mutable settings can not be changed from mutable (True) to immuta
 #### Vote
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Account_Address | 32 | Public key of candidate | Yes | 
+| Account_Address | 32 | Public key of candidate | Yes |
 | Num_Votes | 1 | The number of votes for specified account address [1-8] | Yes |
 
 Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater than 8
@@ -268,3 +269,6 @@ Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater 
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
 | Epoch_Number | 4 | Epoch number request was issued in | Yes |
+
+#### Claim_Reward
+No additional fields
