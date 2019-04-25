@@ -12,14 +12,14 @@
 | `batch_tips_db` | `delegate_index+epoch_number` | 5 | `block_hash` | 32 | Maps a (delegate index, epoch number) combination to the Key (block_hash) of the most recent Post-Commited BatchStateBlock in a given number for a given delegate index |
 | `micro_block_db` | `block_hash` | 32 | Post-Commited MicroBlock | 1,230 | Maps a block hash to a micro block |
 | `micro_block_tip_db` | 0 | 1 | block_hash | 32 | References the Key (block_hash) of the most recent micro block. This database has only 1 row, so the key of this database is always 0. |
-| `epoch_db` | `block_hash` | 32 | Post-Commited Epoch | 4,345 | Maps a block hash to an epoch block | 
+| `epoch_db` | `block_hash` | 32 | Post-Commited Epoch | 4,345 | Maps a block hash to an epoch block |
 | `epoch_tip_db` | 0 | 1 | `block_hash` | 32 | References the Key (block_hash) of the most recent epoch block. This database has only 1 row, so the key of this database is always 0. |
-| `representative_db` | `account_address` | 32 | `representative_info` | 112 | Maps an account address of a representative to info about that representative | 
-| `candidacy_db` | `account_address` | 32 | `candidacy_info` | 100 | Maps an account address of a delegate candidate to info about that candidate | 
-| `leading_candidacy_db` | `account_address` | 32 | `candidacy_info` | 100 | The current leaders of the election (top 8) | 
+| `representative_db` | `account_address` | 32 | `representative_info` | 112 | Maps an account address of a representative to info about that representative |
+| `candidacy_db` | `account_address` | 32 | `candidacy_info` | 100 | Maps an account address of a delegate candidate to info about that candidate |
+| `leading_candidacy_db` | `account_address` | 32 | `candidacy_info` | 100 | The current leaders of the election (top 8) |
 | `remove_candidates_db` | 0 | 1 | `account_address` | 32 | The candidates to remove from candidacy_db on epoch transition. This db uses duplicate keys |
 | `remove_reps_db` | 0 | 1 | `account_address` | 32 | The representatives to remove from representative_db on epoch transition. This db uses duplicate keys |
-
+| `rep_rewards_db` | `block_hash` | 32 | `rep_rewards` | TBD | Maps the account address of a representative combined with the epoch number to the rewards earned by the rep and its supporters during that epoch. |
 
 
 Note all the sizes are in bytes.
@@ -48,8 +48,8 @@ If the account type is native, the account include the following addtional infor
 
 | Value Item | Size | Description |
 | --- | --- | --- |
-| rep_block | 32 | block where account most recently changed representative | 
-| open_block | 32 | original send block that opened this account | 
+| rep_block | 32 | block where account most recently changed representative |
+| open_block | 32 | original send block that opened this account |
 | token_count | 2 | number of different kinds of tokens |
 | token_entries | token_count * 50 | Array of token_entries, see the table below |
 
@@ -57,27 +57,27 @@ If the account type is native, the account include the following addtional infor
 | Value Item | Size | Description |
 | --- | --- | --- |
 | token_id | 32 | token ID |
-| whitelisted | 1 | if the user account is whitelisted | 
+| whitelisted | 1 | if the user account is whitelisted |
 | frozen | 1 | if the user account is frozen|
 | balance | 16 | balance of this kind of token |
 
-Please refer the Request IDD for token_id computation. 
+Please refer the Request IDD for token_id computation.
 
 #### token account additional information
 If the account type is token, the account include the following addtional information
 
 | Value Item | Size | Description |
 | --- | --- | --- |
-| total_supply | 16 | The total amount of token issued | 
+| total_supply | 16 | The total amount of token issued |
 | token_balance | 16 | remaining balance hold by the token account |
 | token_fee_balance | 16 | fees collected, unwithdrawed |
-| Fee_Type | 1 | percentage or absolute | 
-| Fee_Rate | 16 | [0, 100] if Fee_Type is percentage | 
+| Fee_Type | 1 | percentage or absolute |
+| Fee_Rate | 16 | [0, 100] if Fee_Type is percentage |
 | Symbol | <=8 | The symbol of the token. |
 | Name | <=32 | The name of the token. |
 | Issuer Info | <= 512 | Optional field for the issuer to put its information.|
-| Controller_Count | 1 | The number of controllers, in [0, 10] | 
-| Controllers[] | Controller_Count * sizeof Controller | An array of controllers. The format of controllers is defined in the Controller table. | 
+| Controller_Count | 1 | The number of controllers, in [0, 10] |
+| Controllers[] | Controller_Count * sizeof Controller | An array of controllers. The format of controllers is defined in the Controller table. |
 | Settings | 8 | A set of settings as shown in the Token Setting table |
 
 ##### Controller
@@ -98,7 +98,7 @@ If the account type is token, the account include the following addtional inform
 | Value Item | Size | Description | Hash Sequence |
 | --- | --- | --- | --- |
 | Type | 1 | Request type | 1 |
-| Origin  | 32 | Account address | 2 | 
+| Origin  | 32 | Account address | 2 |
 | Previous | 32 | Previous block hash on account| 3 |
 | Fee | 16 | Transaction Fee | 4 |
 | SQN  | 4 | Sequence Number, the number of sends, increment only | 5 |
@@ -128,23 +128,23 @@ Please refer the Request IDD for Request details.
 
 ### `token_user_status_db`
 | Value Item | Size | Description |
-| --- | --- | --- | 
-| whitelisted | 1 | if the user account is whitelisted | 
+| --- | --- | --- |
+| whitelisted | 1 | if the user account is whitelisted |
 | frozen | 1 | if the user account is frozen|
 
 #### `token_user_id`
-A token_user_id = Hash(token_id, account_address). Please refer the Request IDD for token_id computation. 
+A token_user_id = Hash(token_id, account_address). Please refer the Request IDD for token_id computation.
 
 ### `batch_db`, `micro_block_db`, and `epoch_db`
 
-BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post-committed) by delegate consensus sessions. All the three kinds of post-committed blocks share some common fields. 
+BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post-committed) by delegate consensus sessions. All the three kinds of post-committed blocks share some common fields.
 
 ### Structure and common fields of post-committed blocks databases
 
 (Common field size total: 201B)
 
 | Field Name |Size | Description | Hash Sequence |
-| --- | -------------| ----------------- | --- | 
+| --- | -------------| ----------------- | --- |
 | MessagePrequel | 8 | Message header (see below) |  1 |
 | Primary | 1 | Primary delegate's index |  2 |
 | Epoch Number  | 4 | Epoch number to which the block belongs |  3 |
@@ -243,7 +243,7 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 | votes_received_weighted | 16 | Total votes received so far this epoch, already weighted by stake of caster |
 | bls_key | 64 | bls key to be used as delegate to encrypt consensus messages |
 | stake | 16 | amount to stake as a delegate |
-| epoch_modified | 4 | which epoch this record was most recently modified | 
+| epoch_modified | 4 | which epoch this record was most recently modified |
 
 ### `leading_candidacy_db`
 
@@ -252,7 +252,7 @@ BatchStateBlocks, MicroBlocks, and Epochs are blocks that must be approved (post
 | votes_received_weighted | 16 | Total votes received so far this epoch, already weighted by stake of caster |
 | bls_key | 64 | bls key to be used as delegate to encrypt consensus messages |
 | stake | 16 | amount to stake as a delegate |
-| epoch_modified | 4 | which epoch this record was most recently modified | 
+| epoch_modified | 4 | which epoch this record was most recently modified |
 
 
 Note, leading_candidacy_db is simply the current top 8 candidates from the candidacy_db. It is continuously kept up to date based on votes cast
@@ -266,3 +266,9 @@ Note, leading_candidacy_db is simply the current top 8 candidates from the candi
 | Value Item | Size | Description |
 | --- | --- | --- |
 | account_address | 32 | account address of representative to be removed |
+
+
+### `rep_rewards_db`
+| Value Item | Size | Description |
+| --- | --- | --- |
+| rep_rewards | TBD | Rewards earned by a representative and its supporters during a particular epoch period |
