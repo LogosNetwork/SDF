@@ -1,0 +1,69 @@
+@startuml
+
+Title Node Identity
+
+actor User
+box "Core" #LightBlue
+    participant node
+    database wallet
+    database ledger
+end box
+collections txa as "TxAcceptors"
+
+User -> node : **Store Keys**\n(BLS private key,\nECIES private key)
+activate node
+
+alt wallet unlocked
+    node --> ledger : query with BLS key,\ncheck if delegate is\nin office or incoming
+
+    alt in office\n(stored in epoch block i-([2,5]))
+        node --> node: assume delegate duties
+    else incoming (stored in epoch block i-1)
+        alt auto advert on
+            node --> node: enable address\nadvertisement per IM\n(Greg's design)
+        end
+    end
+
+    node --> wallet : store both keys in \nencrypted format
+    node --> node : enter **ID unlocked** state
+    node -> User : success
+else wallet locked
+    node -> User : error
+end
+deactivate node
+
+group ID unlocked
+
+    User -> node : **Store Keys**\n(BLS private key,\nECIES private key)
+    activate node
+
+    alt current identity is in office
+        rnote right of node
+            disallow changing identity in office
+            until kill switch implementation
+        endrnote
+        node -> User : error
+    else current identity is incoming delegate / not recorded
+        node --> node : store both keys in\nencrypted format\n(overwriting)
+        alt new identity is incoming &&\nauto advert on
+            node --> node : re-advertise
+        end
+        node -> User : success
+    end
+    deactivate node
+
+    User -> node : **Lock Delegate**\n()
+    activate node
+
+    alt in office
+        node -> User : error
+    else
+        node --> wallet : erase stored keys
+        node --> node : exit **ID unlocked** state
+        node -> User : success
+    end
+    deactivate node
+
+end
+
+@enduml

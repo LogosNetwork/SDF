@@ -17,7 +17,7 @@ On startup the core software parses configuration file and command line options 
 
 The class diagram is shown of Figure 1.
 
-![](/home/gregt/Documents/Design/TxAcceptor/txa-class.png) 
+![](./txa-class.png) 
 Figure 1. TxAcceptor class diagram.
 
 TxAcceptor functionality is implemented by five classes:
@@ -33,7 +33,7 @@ There are two types of messages handled by TxAcceptor: Transaction and Heartbeat
 
 ### Binary message format
 | Field Name | Size | Description|
-|---|----|----|
+| --- | ---- | ---- |
 | Version | 1 | Logos core protocol version|
 | Message Type| 1| Type of message|
 |MPF|2| Multipurpose field|
@@ -64,10 +64,10 @@ This is an example of a single transaction in Json format. Note that the value f
 ## TxAcceptor instantiation and transaction forwarding
 
 TxAcceptor instantiation and transaction forwarding is shown on sequence diagram on Figure 2 - Standalone mode and Figure 3 - Delegate mode.
-![](/home/gregt/Documents/Design/TxAcceptor/txa-send-stand-seq.png) 
+![](./txa-send-stand-seq.png) 
 Figure 2. Standalone mode
 
-![](/home/gregt/Documents/Design/TxAcceptor/txa-send-del-seq.png) 
+![](./txa-send-del-seq.png) 
 Figure 3. Delegate mode
 
 When running in standalone mode, TxAcceptor class is instantiated outside of the logos::node class. The logos::node class and consequently all other contained within it classes are not instantiated. Boost asio threads and service are instantiated in order to provide asynchronous socket and timer operations. TxAcceptor instantiates TxAcceptorChannel class which starts accepting connection from the delegate. Note that non-delegate node should not attempt to connect to TxAcceptor. Heartbeat timer is started with the timeout set at 15 seconds.
@@ -83,7 +83,7 @@ If a network error is received in standalone mode then TxChannel closes the sock
 ## TxReceiver instantiation and transactions receiving
 
 TxReceiver instantiation and transaction receiving is shown on sequence diagram on Figure 4.
-![](/home/gregt/Documents/Design/TxAcceptor/txa-recv-seq.png) 
+![](./txa-recv-seq.png) 
 Figure 3.
 
 TxReceiver receiver is only instantiated by the delegate when TxAcceptor is instantiated as standalone. ConsensusContainer reference is passed to TxReceiver as TxChannel. 

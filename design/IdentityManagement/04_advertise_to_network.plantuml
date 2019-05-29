@@ -1,0 +1,44 @@
+@startuml
+
+Title Advertise to Network
+
+actor User
+box "Core" #LightBlue
+    participant node
+    database wallet
+    database ledger
+end box
+collections txa as "TxAcceptors"
+
+group ID unlocked
+    User -> node : **Advertise TxA**\n()
+    activate node
+    node --> node : advertise //all// TxA addresses\ncurrently stored in memory
+    deactivate node
+
+    User -> node : **Advertise Custom TxA**\n([IP])
+    activate node
+    node --> node : advertise TxA addresses\nin input parameter
+    deactivate node
+
+    rnote right of User
+        cgw not in scope
+    endrnote
+    User -> node : **Advertise CGw**()
+    User -> node : **Advertise custom CGw**([IP,[del_id]])
+end
+
+User -> node : **Disable Auto-Advertise**()
+activate node
+node --> node : disable auto advertise
+
+deactivate node
+
+
+User -> node : **Enable Auto Advertise**()
+activate node
+node --> node : enable auto advertise
+
+deactivate node
+
+@enduml
