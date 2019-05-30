@@ -741,3 +741,30 @@ The below requests are all part of the staking subchain:
 
 See the IDD for more details.
 
+## Implementation
+
+There is a certain race condition regarding voting near the epoch boundary.
+
+### Problem
+Consider an ElectionVote submitted at the very end of epoch i,
+and a Send submitted at the very beginning of epoch i+1.
+Assume the origin account of the Send has a rep. Assume this rep is
+the origin account of the ElectionVote.
+When the ElectionVote is applied, the software will look up the reps voting
+power for epoch i in voting_power_db
+When the Send is applied, the software will transition the rep's voting power
+to epoch i+1. During this transition, the voting power for this rep for epoch i is overwritten.
+If the Send is applied before the ElectionVote, the voting power for this rep
+for epoch i is no longer stored anywhere. 
+
+### Solution
+To mitigate this race condition,there is a special database called voting_power_fallback_db
+Whenever the software is transitioning voting power of a rep to epoch i+1, the software
+checks that the rep actually voted in epoch i. If the rep did not vote in epoch i, the reps
+voting power for epoch i is first stored in voting_power_fallback_db, and then voting power
+for the rep (stored in voting_power_db) is transitioned to the next epoch. If the rep did vote in epoch i, no data is stored in voting_power_fallback_db.
+When applying an ElectionVote, the software checks if the epoch number of the
+ElectionVote is less than the epoch modified field of VotingPowerInfo. If so,
+the software reads voting power from voting_power_fallback_db. Otherwise, the
+software reads voting power from voting_power_db
+
