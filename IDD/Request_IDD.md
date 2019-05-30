@@ -44,6 +44,7 @@ Note that Signature = Sign(Hash). Also note that the "Work" field is not covered
 | Stop_Representing  | 20 | Stop being a representative on the network |
 | Stake | 21 | Set amount staked to self |
 | Unstake | 22 | Set amount staked to self to 0 |
+| Claim_Reward | 23 | Claim all available rewards |
 
 Note that open and receive transactions of accounts are inferred from the send (any type of send) transaction request.
 
@@ -237,7 +238,7 @@ Note that the _mutable settings can not be changed from mutable (True) to immuta
 #### Vote
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Account_Address | 32 | Public key of candidate | Yes | 
+| Account_Address | 32 | Public key of candidate | Yes |
 | Num_Votes | 1 | The number of votes for specified account address [1-8] | Yes |
 
 Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater than 8
@@ -312,3 +313,6 @@ To calculate amount of funds proxied or staked at any given time in the past, tr
 
 Note, if an account wishes to proxy without staking any logos (lock proxying),
 set the lock_proxy field to 0
+
+#### Claim_Reward
+No additional fields

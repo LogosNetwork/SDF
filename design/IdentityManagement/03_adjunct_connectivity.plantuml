@@ -1,0 +1,65 @@
+@startuml
+
+Title Adjunct Connectivity
+
+actor User
+box "Core" #LightBlue
+    participant node
+    database wallet
+    database ledger
+end box
+collections txa as "TxAcceptors"
+
+group ID unlocked
+
+    rnote right of User
+        technically, can issue the commands below
+        while //not// in **ID unlocked** state, but
+        TxA handshake will fail
+        per current implementation
+    endrnote
+
+    rnote right of User
+        also refer to
+        ""DelegateIdentityManager""
+        ""::OnTxAcceptorUpdate""
+    endrnote
+
+    User -> node : **Connect to TxA**\n([IP])
+    activate node
+    node --> txa : perform handshake
+    txa --> node : handshake completed
+    node --> node : store TxA addrs in memory in\npreparation for advert
+    alt auto advert on
+        node --> node : advertise
+    end
+
+    deactivate node
+
+    User -> node : **Delete TxA**\n([IP],\nnow? //default true//)
+    activate node
+    alt now==true
+        node --> txa !! : disconnect
+        node --> node : delete TxA addr from memory
+        alt auto advert on
+            node --> node : advertise
+        end
+    else
+        alt in office
+            node --> node : defer the above actions\ntill end of term
+        else
+            node -> User : error
+        end
+    end
+
+    deactivate node
+
+    rnote right of User
+        CGw not in scope
+    endrnote
+    User -> node : **Connect CGw**\n([IP, [del_id]])
+    User -> node : **Delete CGw**\n([IP],\nnow? //default true//)
+
+end
+
+@enduml

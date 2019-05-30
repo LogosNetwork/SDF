@@ -1,0 +1,42 @@
+@startuml
+
+Title Wallet Management
+
+actor User
+box "Core" #LightBlue
+	participant node
+    database wallet
+    database ledger
+end box
+collections txa as "TxAcceptors"
+
+note over wallet
+    just a logical distinction between
+    ledger (blocks, accounts, etc.)
+    data and wallet data. In actual
+    implementation they may be in
+    the same LMDB environment.
+end note
+
+User -> node : **Unlock Wallet**\n(password)
+activate node
+node --> wallet : query
+alt wallet contains BLS + ECIES keys
+    node --> node : enter **ID unlocked** state\n(see //Node Identity//)
+end
+node --> node : enter **wallet unlocked** state
+deactivate node
+
+User -> node : **Lock Wallet**\n()
+activate node
+alt ID unlocked
+    alt in office
+        node --> node : defer exit till delegate's\ncurrent term ends
+    else
+        node --> node : exit **ID unlocked** state
+    end
+end
+node --> node : exit **wallet unlocked** state
+deactivate node
+
+@enduml
