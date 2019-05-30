@@ -22,7 +22,7 @@ Note that Signature = Sign(Hash). Also note that the "Work" field is not covered
 | Request Type | Code | Description |
 | --- | ----------------- | ----------------- |
 | Native_Send | 0 | Send multiple transaction from the native Logos account |
-| Native_Change  | 1 | Change the representative of the native Logos account |
+| Proxy  | 1 | Change the representative of the native Logos account, and set amount of Logos locked proxied |
 | Token_Issuance | 2 | Issue a new token |
 | Token_Issuance_Addition | 3 | Issue more of an existing token |
 | Token_Change_Setting | 4 | Change one token account setting |
@@ -42,7 +42,9 @@ Note that Signature = Sign(Hash). Also note that the "Work" field is not covered
 | Renounce_Candidacy | 18 | Undeclare delegate candidacy for upcoming elections |
 | Start_Representing | 19 | Become Representative on the network |
 | Stop_Representing  | 20 | Stop being a representative on the network |
-| Claim_Reward | 21 | Claim all available rewards |
+| Stake | 21 | Set amount staked to self |
+| Unstake | 22 | Set amount staked to self to 0 |
+| Claim_Reward | 23 | Claim all available rewards |
 
 Note that open and receive transactions of accounts are inferred from the send (any type of send) transaction request.
 
@@ -58,11 +60,6 @@ Note that open and receive transactions of accounts are inferred from the send (
 | Count | 1 | Number of requests, [1-8]| - |
 | Transaction[]   | sizeof Transaction * Count | Array of Transactions | Yes |
 
-#### Native_Change_Representative
-| Field Name |Size (Byte)| Description | Hash |
-| --- | -------------| ----------------- | -- |
-| Client | 32 | to be deleted | - |
-| Address | 32 | Representative address | Yes |
 
 #### Token_Issuance
 | Field Name |Size (Byte)| Description | Hash |
@@ -236,7 +233,7 @@ Note that the _mutable settings can not be changed from mutable (True) to immuta
 | --- | -------------| ----------------- |--|
 | Count | 1 | The number of entries in vote array [1-8] | - |
 | Vote[] | Count * sizeof Vote | An array of votes | Yes |
-| Epoch_Number | 4 | Epoch number request was issued in | Yes |
+| epoch_num | 4 | Epoch number request was issued in | Yes |
 
 #### Vote
 | Field Name |Size (Byte)| Description | Hash |
@@ -249,26 +246,73 @@ Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater 
 #### Start_Representing
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Stake | 16 | Amount of logos to stake as representative | Yes |
-| Epoch_Number | 4 | Epoch number request was issued in | Yes |
+| set_stake | 1 | bool flag indicating whether stake field is present | Yes |
+| Stake | 16 | Set self stake to this many logos (optional, may have existing stake) | Yes |
+| epoch_num | 4 | Epoch number request was issued in | Yes |
+| staking_subchain_prev | 32 | Hash of most recent request affecting amount locked proxied or staked to self | Yes |
+| levy_percentage | 1 | Levy percentage used for rewards | Yes |
+
+Note, the following request types are chained together via staking_subchain_prev field:
+* Start_Representing
+* Stop_Representing
+* Announce_Candidacy
+* Renounce_Candidacy
+* Stake
+* Unstake
+* Proxy
+All of these requests affect the amount of funds an account has locked proxied or staked to self.
+To calculate amount of funds proxied or staked at any given time in the past, traverse this subchain.
 
 #### Stop_Representing
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Epoch_Number | 4 | Epoch number request was issued in | Yes |
+| set_stake | 1 | bool flag indicating whether stake field is present | Yes |
+| Stake | 16 | Set self stake to this many logos (optional) | Yes |
+| epoch_num | 4 | Epoch number request was issued in | Yes |
+| staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
 
 #### Announce_Candidacy
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Stake | 16 | Amount of logos to stake as delegate (optional, can use existing stake as representative) | Yes |
+| set_stake | 1 | bool flag indicating whether stake field is present | Yes |
+| Stake | 16 | Set self stake to this many logos (optional, can use existing stake as representative) | Yes |
 | BLS_Key | 64 | BLS key used as a delegate | Yes |
-| Epoch_Number | 4 | Epoch number request was issued in | Yes |
-| Identity_Encryption_Key | 32 | Key used to encrypt IP | Yes |
+| epoch_num | 4 | Epoch number request was issued in | Yes |
+| ecies_key | TODO How big is this? | Key used to encrypt IP | Yes |
+| staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
+| levy_percentage | 1 | Levy percentage used for rewards | Yes |
 
 #### Renounce_Candidacy
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| Epoch_Number | 4 | Epoch number request was issued in | Yes |
+| set_stake | 1 | bool flag indicating whether stake field is present | Yes |
+| stake | 16 | Set self stake to this many logos (optional) | Yes |
+| epoch_num | 4 | Epoch number request was issued in | Yes |
+| staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
+
+#### Stake
+| Field Name |Size (Byte)| Description | Hash |
+| --- | -------------| ----------------- |--|
+| stake | 16 | Set self stake to this many logos  | Yes |
+| epoch_num | 4 | Epoch number request was issued in | Yes |
+| staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
+
+#### Unstake
+| Field Name |Size (Byte)| Description | Hash |
+| --- | -------------| ----------------- |--|
+| epoch_num | 4 | Epoch number request was issued in | Yes |
+| staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
+
+#### Proxy
+| Field Name |Size (Byte)| Description | Hash |
+| --- | -------------| ----------------- |--|
+| lock_proxy | 16 | Set locked proxied stake to this many logos. Can be 0 | Yes |
+| representative | 32 | Account address of chosen representative | Yes |
+| epoch_num | 4 | Epoch number request was issued in | Yes |
+| staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
+
+Note, if an account wishes to proxy without staking any logos (lock proxying),
+set the lock_proxy field to 0
 
 #### Claim_Reward
 No additional fields
