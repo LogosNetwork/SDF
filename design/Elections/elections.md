@@ -357,16 +357,26 @@ subsystem to the next epoch.
 ## Overview
 
 The staking system provides a way for accounts to stake funds. To stake funds
-means to make those funds unspendable. Staked funds have a concept of a target, which
+means to make those funds unspendable in exchange for rewards. Staked funds have a concept of a target, which
 is an account that those funds are staked to. Accounts may reduce the amount of funds staked,
 however those funds must first enter a thawing state for 1 thawing period (defaults to 3 weeks)
 before the funds are spendable again. Thawing funds also have a concept of target, which is the
 account those funds were staked to prior to entering the thawing state.
 
-Representatives and delegates will stake to themselves. This form of staking is called self stake.
-Non-representative accounts will stake to representatives via the Proxy request. 
-This form of staking is called locked proxied. Staked funds or funds staked refers to both lockied proxied and self stake.
+There are two types of staking (and two types of staked funds).
+Staked funds or funds staked refers to both lockied proxied and self stake.
 Any request that changes the amount of staked funds is considered a staking request.
+* Self Stake - this is when an account stakes funds to itself. This type of staking
+is only allowed for representatives (and delegates).
+* Locked Proxy - this is when an account stakes funds to a representative. This type
+of staking is only allowed by non-representative accounts. 
+
+Staking primarily impacts voting power and the distribution of rewards. A representative's
+voting power depends on self stake and all stake lock proxied to them. A representative's voting
+power also depends on the available balance (excludes staked or thawing funds) of each account
+that is proxied to them. This amount is called the unlocked proxied amount, and contributes
+to the voting power of a representative, albeit a dilution factor. See Voting Power section for more details.
+* Unlocked Proxy - the available balance of a non-representative account, multiplied by dilution factor
 
 Accounts may increase or decrease the amount of funds staked. Accounts may also change the target of their
 currently staked funds. When accounts change the target of staked funds, a Liability is created,
@@ -381,22 +391,20 @@ to use existing staked funds (with a different target) to satisfy the request, f
 by existing thawing funds and then an account's available balance. See Liabilities
 and StakingManager section for more details.
 
-Staking primarily impacts voting power and the distribution of rewards. A representative's
-voting power depends on self stake and all stake lock proxied to them. A representative's voting
-power also depends on the available balance (excludes staked or thawing funds) of each account
-that is proxied to them. This amount is called the unlocked proxied amount, and contributes
-to the voting power of a representative, albeit a dilution factor. See Voting Power section for more details.
+
 
 ## Databases
 
 Staking introduces 7 new databases:
 * ```voting_power_db``` Information about a representatives voting power. Maps rep address -> voting_power_snapshot
-* ```master_liability_db``` All liabilities in the system. Maps hash -> liability
-* ```rep_liability_db``` Maps rep -> all hashes of liabilities for which rep is a target
-* ```secondary_liability_db``` maps account -> all hashes of secondary liabilities for which account is a origin
+* ```voting_power_fallback_db``` Information about a representatives voting power. Used only in a certain race condition. See Implementation section. Maps rep address -> voting_power_fallback
+* ```master_liabilities_db``` All liabilities in the system. Maps liability hash -> liability
+* ```rep_liabilities_db``` Maps rep -> all hashes of liabilities for which rep is a target
+* ```secondary_liabilities_db``` maps account -> all hashes of secondary liabilities for which account is a origin
 * ```staking_db``` Information about currently staked to self or locked proxied funds. Maps account -> staked funds
-* ```thawing_db``` Information about currently thawing funds. Maps account -> thawing funds
-* ```epoch_rewards_db``` Information about voting rewards on a per epoch basis Maps rep -> rep rewards info
+* ```thawing_db``` Information about currently thawing funds. Maps account -> thawing funds. Uses duplicate keys. Records for an account are ordered in reverse order of expiration epoch (Furthest from expiring are first)
+* ```epoch_rewards_db``` Information about voting rewards on a per epoch basis. Maps rep + epoch number -> epoch rewards info
+* ```global_epoch_rewards_db``` Aggregate information about voting rewards on a per epoch basis. Maps epoch number -> global epoch rewards info
 
 Information about an accounts staked funds, thawing funds and liabilities are stored
 separate from the account_db. This way, deserializing an account does not require deserialization
@@ -461,15 +469,15 @@ StakedFunds and ThawingFunds each contain a hash of the associated Liability.
 ## Thawing Period and Liability Period
 
 The thawing period is equal to the liability period, and defaults to 3 weeks.
-The thawing period and liability period each start at the scheduled conclusion of the epoch
-(the epoch could end early in the event of recall)
-in which those funds began thawing or the liability was created. ThawingFunds have
-an expiration field. As soon as the current time is greater than the expiration,
+The software represents 3 weeks as 42 epochs. ThawingFunds and Liability each have
+an expiration_epoch field. As soon as the current epoch is greater than or equal to the expiration epoch,
 the funds are spendable, and the ThawingFunds and associated Liability 's can be
 removed from their respective databases. Prior to the expiration, thawing funds are not spendable.
 
 An expiration of 0 signifies a Liability or ThawingFunds that never expire. This
 is for currently staked funds, or when a delegate creates ThawingFunds while in office.
+During epoch transition, the software checks if current or incoming delegates created
+any ThawingFunds in the previous epoch, and marks those Thawing Funds as frozen.
 
 ## Voting Power
 
@@ -540,6 +548,31 @@ The getter and setter will not call VotingPowerManager for token accounts.
 ## Liabilities
 
 A liability is a historical record of staked funds (both staked to self and locked proxied).
+Liabilities are needed for slashing; if a rep commits a slashable offense, every account
+lock proxied to that rep is slashed, as well as the rep itself. Liabilities are how the software
+determines which accounts to slash in the event of a slashable offense.
+Liabilities also keep track of the instant reproxy of locked proxied funds.
+These liabilities are known as secondary liabilities. Non-representative accounts
+are able to lock proxy an amount to a given rep, and then re-proxy those same funds to a different rep.
+Liabilities are used to ensure that when an account instantly reproxys, the account is still slashable for actions
+of the old rep for some time (1 liability period, which is 42 epochs).
+
+Instant reproxy satisfies certain safety requirements. Locked proxied funds only
+increase the voting power of a single rep at a time; never do two reps derive voting
+power from the same locked proxy. While the software allows instant reproxy, the reproxy
+is recorded (via secondary liabilities) such that the proxying account is still slashable
+for the previous rep's actions for some time (1 liability period).
+
+All secondary liabilities associated with an account must have the same target.
+This stops an account from lock proxying to A, then lock proxying to B, then lock proxying to C, and so on.
+Accounts can move their locked proxied funds from A to B, but then can't move them from B to C
+without waiting 1 liability period. This restriction allows for an instant reproxy of funds
+once every 42 epochs. If an account desires to change their proxy again prior to 42 epochs,
+that account must use available funds instead of reproxying existing lock proxied funds.
+This restriction ensures that a single set of lock proxied funds are only liable
+for the actions of at most two reps at a time. 
+
+
 All StakedFunds S, owned by account A, have an associated liability L,
 where L.target = S.target, L.amount = S.amount, L.origin = A, and L.expiration = 0.
 An expiration of 0 represents an unset expiration.
@@ -562,10 +595,7 @@ For every Liability with origin A, if the Liability is a secondary liability,
 the hash is stored in secondary_liability_db with key A; otherwise, the hash is stored
 with the associated StakedFunds or ThawingFunds.
 
-All secondary liabilities associated with an account must have the same target.
-This stops an account from lock proxying to A, then lock proxying to B, then lock proxying to C, and so on.
-Accounts can move their locked proxied funds from A to B, but then can't move them from B to C
-without waiting 1 liability period.
+
 
 Whenever StakedFunds or ThawingFunds are deleted, the associated Liability is deleted as well,
 and the hash is removed from rep_liability_db. Expired secondary liabilities are pruned
@@ -576,23 +606,29 @@ when applying a Proxy request.
 
 CreateExpiringLiability creates a liability in master_liability_db, adds a hash
 to rep_liability_db, and returns the hash. The liability has an expiration of
-3 weeks from the end of the epoch.
+3 weeks from the end of the epoch. This is called when a secondary liability is created,
+or when thawing funds are created.
 ![alt text](design/Elections/liability_manager_001.png)
 CreateUnexpiringLiability does the same as above, except sets the expiration to 0.
+This is called when staked funds are created (self stake or lock proxy)
 ![alt text](design/Elections/liability_manager_002.png)
 CreateSecondaryLiability calls CreateExpiringLiability, and also adds the hash
 to secondary_liability_db. The method will fail if an account already has unexpired
-secondary liabilities for a different target.
+secondary liabilities for a different target. This is called during the instant reproxy
+of locked proxied funds.
 ![alt text](design/Elections/liability_manager_003.png)
 PruneSecondaryLiabilities deletes any expired secondary liabilities from all
-liability db's.
+liability db's. This is called whenever the software creates new liabilities for
+a given account.
 ![alt text](design/Elections/liability_manager_004.png)
 UpdateLiabilityAmount changes the amount field of the liability in master_liability_db.
-The other liability db's are not changed.
+The other liability db's are not changed. This is called when an account changes the amount
+of funds staked (self staked or locked proxied).
 ![alt text](design/Elections/liability_manager_005.png)
 DeleteLiability deletes the liability from master_liability_db and also deletes
 the hash from rep_liability_db. Note, the hash is not deleted from secondary_liability_db.
 Hashes are only deleted from secondary_liability_db via the PruneSecondaryLiabilities method.
+This is called when a liability expires.
 ![alt text](design/Elections/liability_manager_006.png)
 
 
@@ -612,32 +648,7 @@ this by calling the Extract(T input,R output,amount,origin) method, which extrac
 the specified amount of funds from input and puts those funds into output. Note,
 input and output may be StakedFunds or ThawingFunds. See the sequence diagrams for more details.
 
-The below figures show the sequence diagrams for the various methods of StakingManager.
 
-Create a StakedFunds object, with an amount of 0. Note, this method does not store
-the object in the db.
-![alt text](design/Elections/staking_manager_001.png)
-Create ThawingFunds object, with an amount of 0. Note, this method does not store
-the object in the db.
-![alt text](design/Elections/staking_manager_002.png)
-UpdateAmount takes in ThawingFunds or StakedFunds as a parameter, and updates
-the amount of funds staked or thawing. This method also updates any associated liabilities.
-![alt text](design/Elections/staking_manager_003.png)
-Extract moves the specified amount of funds from input to output, updates
-the associated liabilities and returns the amount of funds extracted. A secondary liability
-is created if necessary. If too many thawing funds or too many secondary liabilities already
-exist, Extract will fail to move any funds. If input is left with no funds after extraction,
-the input (and associated liabilities) are deleted. Note, the input funds are updated 
-in the db, but the output funds are not. This is because
-to satisfy a staking request, the software may need to use many extraction inputs.
-![alt text](design/Elections/staking_manager_004.png)
-StakeAvailableFunds uses available funds, rather than staked or thawing funds, to create
-or increase the amount of StakedFunds. The available_balance of an account is updated,
-which also updates the voting power of the affected rep.
-![alt text](design/Elections/staking_manager_005.png)
-PruneThawing deletes any ThawingFunds that have expired. Note, ThawingFunds are ordered
-by expiration date, so once an unexpired ThawingFund is found, this method can return.
-![alt text](design/Elections/staking_manager_006.png)
 
 Any Request that involves staking falls under one of 3 cases:
 * Increase amount of funds staked. Target of staked funds doesn't change
@@ -645,21 +656,52 @@ Any Request that involves staking falls under one of 3 cases:
 * Change the target of funds staked. This also handles the case where a sender
 currently has no funds staked, but the request specifies funds to stake.
 
-The below diagrams detail each of these 3 cases. In each case, StakingManager
+The below diagrams detail each of these 3 cases. In these diagrams, helper methods of
+StakingManager are called. These helper methods have corresponding sequence
+diagrams further down in this section. In each case, StakingManager
 calls VotingPowerManager to update the voting power of the affected representative.
-To increase funds staked, StakingManager calls extract on any ThawingFunds, in decreasing order
+To increase funds staked, StakingManager calls extract on any thawing funds, in decreasing order
 of expiration time, and then calls StakeAvailableFunds if neccessary.
 ![alt text](design/Elections/staking_manager_007.png)
-To decrease funds staked, StakingManager creates new ThawingFunds, then extracts
-the specified amount of funds from currently staked funds into the ThawingFunds.
+To decrease funds staked, StakingManager creates new thawing funds, then extracts
+the specified amount of funds from currently staked funds into the thawing funds.
 ![alt text](design/Elections/staking_manager_008.png)
-To change the target of staked funds, StakingManager creates new StakedFunds with
-the requested target, and then extracts the existing StakedFunds funds into the new StakedFunds.
-If there are funds remaining in the old StakedFunds, the old funds begin thawing.
-If the software needs more funds after extracting from the old StakedFunds, ThawingFunds
+To change the target of staked funds, StakingManager creates new staked funds with
+the requested target, and then extracts the existing staked funds funds into the new staked funds.
+If there are funds remaining in the old staked funds, the old funds begin thawing.
+If the software needs more funds after extracting from the old staked funds, thawing funds
 and then available funds are used in the same manner as in the Increase Stake case. 
 Note, in this case, the voting power of the old rep and the new rep must be updated.
 ![alt text](design/Elections/staking_manager_009.png)
+
+The below figures show the sequence diagrams for the various methods of StakingManager.
+
+Create a staked funds object, with an amount of 0. Note, this method does not store
+the object in the db.
+![alt text](design/Elections/staking_manager_001.png)
+Create thawing funds object, with an amount of 0. Note, this method does not store
+the object in the db.
+![alt text](design/Elections/staking_manager_002.png)
+UpdateAmount takes in thawing funds or staked funds as a parameter, and updates
+the amount of funds staked or thawing. This method also updates any associated liabilities.
+![alt text](design/Elections/staking_manager_003.png)
+Extract moves the specified amount of funds from input to output, updates
+the associated liabilities and returns the amount of funds extracted. A secondary liability
+is created if necessary. If input is left with no funds after extraction,
+the input (and associated liabilities) are deleted. Note, the input funds are updated 
+in the db, but the output funds are not. This is because
+to satisfy a staking request, the software may need to use many extraction inputs.
+Extract is called in many places within StakingManager. Extract is called whenever an account
+changes the amount of funds staked (staked to self or lock proxied), as well as anytime
+an account performs an instant reproxy.
+![alt text](design/Elections/staking_manager_004.png)
+StakeAvailableFunds uses available funds, rather than staked or thawing funds, to create
+or increase the amount of staked funds. The available_balance of an account is updated,
+which also updates the voting power of the affected rep.
+![alt text](design/Elections/staking_manager_005.png)
+PruneThawing deletes any thawing funds that have expired. Note, thawing funds are ordered
+by expiration date, so once an unexpired ThawingFund is found, this method can return.
+![alt text](design/Elections/staking_manager_006.png)
  
 
 ## Representative Rewards
@@ -694,20 +736,8 @@ and both proxying accounts claim rewards for epoch i, the record for rep for epo
 Within consensus, delegates use their stake to accept or reject Requests. However,
 a delegate's stake only consists of self stake, and ignores any form of proxied stake.
 A delegates stake is set to their self stake during the epoch the delegate was elected.
-If a delegate changes the amount staked to self, that change impacts voting power immediately,
+If a delegate changes the amount staked to self, that change impacts voting power in the next epoch,
 but does not impact delegate stake until that delegate starts a new term (terms are 4 epochs).
-This is done by marking a candidates stake in the candidacy_db whenever that candidate receives votes,
-and setting a delegate's stake, recorded in the epoch block, to be equal to the stake in candidacy_db
-(if the delegate was just elected), or to the stake recorded in the previous epoch block
-(if delegate is persistent).
-
-There is an edge case where a candidate may receive their first vote at the very end
-of the epoch, and the vote is not applied until some time into the next epoch. At this
-point, the info in voting_power_db may have already transitioned to the next epoch, and the
-candidate's self stake for the previous epoch is no longer stored anywhere. To remedy this situation,
-whenever the info in voting_power_db transitions to the next epoch during the elections dead period,
-the candidate's self stake is set to current.self_stake_amount before current is set to next.
-See Voting Power section for more details.
 
 
 When a delegate reduces their stake, the thawing period for those funds doesn't start
@@ -740,4 +770,31 @@ The below requests are all part of the staking subchain:
 * RenounceCandidacy
 
 See the IDD for more details.
+
+## Implementation
+
+There is a certain race condition regarding voting near the epoch boundary.
+
+### Problem
+Consider an ElectionVote submitted at the very end of epoch i,
+and a Send submitted at the very beginning of epoch i+1.
+Assume the origin account of the Send has a rep. Assume this rep is
+the origin account of the ElectionVote.
+When the ElectionVote is applied, the software will look up the reps voting
+power for epoch i in voting_power_db
+When the Send is applied, the software will transition the rep's voting power
+to epoch i+1. During this transition, the voting power for this rep for epoch i is overwritten.
+If the Send is applied before the ElectionVote, the voting power for this rep
+for epoch i is no longer stored anywhere. 
+
+### Solution
+To mitigate this race condition,there is a special database called voting_power_fallback_db
+Whenever the software is transitioning voting power of a rep to epoch i+1, the software
+checks that the rep actually voted in epoch i. If the rep did not vote in epoch i, the reps
+voting power for epoch i is first stored in voting_power_fallback_db, and then voting power
+for the rep (stored in voting_power_db) is transitioned to the next epoch. If the rep did vote in epoch i, no data is stored in voting_power_fallback_db.
+When applying an ElectionVote, the software checks if the epoch number of the
+ElectionVote is less than the epoch modified field of VotingPowerInfo. If so,
+the software reads voting power from voting_power_fallback_db. Otherwise, the
+software reads voting power from voting_power_db
 
