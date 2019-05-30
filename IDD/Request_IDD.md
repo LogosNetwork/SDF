@@ -59,11 +59,6 @@ Note that open and receive transactions of accounts are inferred from the send (
 | Count | 1 | Number of requests, [1-8]| - |
 | Transaction[]   | sizeof Transaction * Count | Array of Transactions | Yes |
 
-#### Native_Change_Representative
-| Field Name |Size (Byte)| Description | Hash |
-| --- | -------------| ----------------- | -- |
-| Client | 32 | to be deleted | - |
-| Address | 32 | Representative address | Yes |
 
 #### Token_Issuance
 | Field Name |Size (Byte)| Description | Hash |
