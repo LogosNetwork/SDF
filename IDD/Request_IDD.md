@@ -246,10 +246,10 @@ Note: The sum of all the Num_Votes fields in an ElectionVote must be no greater 
 #### Start_Representing
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| set_stake | 1 | bool flag indicating whether stake field is present | Yes |
-| Stake | 16 | Set self stake to this many logos (optional, may have existing stake) | Yes |
 | epoch_num | 4 | Epoch number request was issued in | Yes |
 | staking_subchain_prev | 32 | Hash of most recent request affecting amount locked proxied or staked to self | Yes |
+| set_stake | 1 | bool flag indicating whether stake field is present | No |
+| Stake | 16 | Set self stake to this many logos (optional, may have existing stake) | Yes if set_stake==true |
 | levy_percentage | 1 | Levy percentage used for rewards | Yes |
 
 Note, the following request types are chained together via staking_subchain_prev field:
@@ -266,29 +266,29 @@ To calculate amount of funds proxied or staked at any given time in the past, tr
 #### Stop_Representing
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| set_stake | 1 | bool flag indicating whether stake field is present | Yes |
-| Stake | 16 | Set self stake to this many logos (optional) | Yes |
 | epoch_num | 4 | Epoch number request was issued in | Yes |
 | staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
+| set_stake | 1 | bool flag indicating whether stake field is present | No |
+| Stake | 16 | Set self stake to this many logos (optional) | Yes if set_stake==true |
 
 #### Announce_Candidacy
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| set_stake | 1 | bool flag indicating whether stake field is present | Yes |
-| Stake | 16 | Set self stake to this many logos (optional, can use existing stake as representative) | Yes |
-| BLS_Key | 64 | BLS key used as a delegate | Yes |
 | epoch_num | 4 | Epoch number request was issued in | Yes |
-| ecies_key | TODO How big is this? | Key used to encrypt IP | Yes |
 | staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
+| set_stake | 1 | bool flag indicating whether stake field is present | No |
+| Stake | 16 | Set self stake to this many logos (optional, can use existing stake as representative) | Yes if set_stake==true |
+| BLS_Key | 64 | BLS key used as a delegate | Yes |
+| ecies_key | TODO How big is this? | Key used to encrypt IP | Yes |
 | levy_percentage | 1 | Levy percentage used for rewards | Yes |
 
 #### Renounce_Candidacy
 | Field Name |Size (Byte)| Description | Hash |
 | --- | -------------| ----------------- |--|
-| set_stake | 1 | bool flag indicating whether stake field is present | Yes |
-| stake | 16 | Set self stake to this many logos (optional) | Yes |
 | epoch_num | 4 | Epoch number request was issued in | Yes |
 | staking_subchain_prev | 32 | Hash of most recent request affecting amount lock proxied or staked to self | Yes |
+| set_stake | 1 | bool flag indicating whether stake field is present | No |
+| stake | 16 | Set self stake to this many logos (optional) | Yes if set_stake==true |
 
 #### Stake
 | Field Name |Size (Byte)| Description | Hash |
