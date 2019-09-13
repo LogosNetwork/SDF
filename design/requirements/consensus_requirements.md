@@ -1,6 +1,4 @@
-#Consensus Requirements
-
-
+<h1>Consensus Requirements</h1>
 
 
 <table>
@@ -8,11 +6,9 @@
    <td>
 <h1>Requirements</h1>
 
-
    </td>
    <td>
 <h1>Notes</h1>
-
 
    </td>
   </tr>

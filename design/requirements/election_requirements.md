@@ -1,4 +1,4 @@
-#Election Requirements
+<h1>Election Requirements</h1>
 
 
 <table>
@@ -418,12 +418,6 @@
   </tr>
   <tr>
    <td>
-   </td>
-   <td>
-   </td>
-  </tr>
-  <tr>
-   <td>Note: Yellow requirements have been moved to epoch requirements
    </td>
    <td>
    </td>
