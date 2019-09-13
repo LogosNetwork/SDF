@@ -1,0 +1,27 @@
+@startuml
+center header
+<font size="24" color=black>Voting and Epoch Transition</font>
+endheader
+
+collections Representatives
+collections Delegates
+collections "P2P (All nodes)" as P2P
+collections Candidates
+
+group epoch 0
+Representatives -> Delegates : cast ElectionVotes
+Candidates -> Delegates : RenounceCandidacy/StopRepresenting
+end
+
+group epoch 1
+group Epoch block proposal and post-commit
+Delegates -> Delegates : Replace retiring delegates with top 8 candidates. Record next epoch's delegates in epoch block. 
+Delegates -> P2P : Propagate post-committed epoch block to network
+P2P -> P2P : Update candidates database by removing election winners
+P2P -> P2P : Update candidates database by removing candidates that renounced
+P2P -> P2P : Update candidates database by adding delegates eligible for reelection
+end
+Representatives -> Delegates : cast new ElectionVotes
+end
+
+@enduml

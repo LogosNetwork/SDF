@@ -1,0 +1,29 @@
+@startuml
+center header
+<font size="24" color=black>Announcing and Voting</font>
+endheader
+
+actor "Representative 1" as R1
+actor "Representative 2" as R2
+actor "Representative 3" as R3
+collections Delegates
+collections "P2P (All nodes)" as P2P
+
+activate Delegates
+group epoch 0 (announcing)
+R1 -> Delegates : AnnounceCandidacy
+Delegates -> Delegates : consensus on AnnounceCandidacy for Rep1
+Delegates -> P2P : RequestBlock with AnnounceCandidacy signed by Rep1
+P2P -> P2P : Record Rep1 as a candidate in upcoming elections
+end
+
+group epoch 1 (voting, Rep1 is candidate)
+R1 -> Delegates : ElectionVote for Rep1
+Delegates -> Delegates : consensus on vote request, update current tally of votes
+R2 -> Delegates : ElectionVote for Rep1
+Delegates -> Delegates : consensus on vote request, update current tally of votes
+R3 -> Delegates : Election vote for Rep1
+Delegates -> Delegates : consensus on vote request, update current tally of votes
+end
+
+@enduml

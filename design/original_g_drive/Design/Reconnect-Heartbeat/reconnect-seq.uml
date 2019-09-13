@@ -1,0 +1,57 @@
+@startuml
+
+activate NetIOAssembler
+activate ConsensusNetIO
+activate ConsensusNetIOManager
+activate ConsensusManager
+activate ConsensusConnection
+activate PeerAcceptor
+
+[-> NetIOAssembler : Socket error
+
+[-> ConsensusNetIO : Socket error
+
+NetIOAssembler -> ConsensusNetIOManager : OnNetIOError()
+ConsensusNetIO -> ConsensusNetIOManager : OnNetIOError()
+
+ConsensusNetIOManager -> ConsensusManager : OnNetIOError()
+
+ConsensusManager -> ConsensusConnection : Destroy
+deactivate ConsensusConnection
+
+ConsensusNetIOManager -> ConsensusNetIO: Destroy
+ConsensusNetIO -> NetIOAssembler : Destroy
+deactivate ConsensusNetIO
+deactivate NetIOAssembler
+
+alt TCP/IP client
+ConsensusNetIOManager -> ConsensusNetIO : Instantiate
+activate ConsensusNetIO
+ConsensusNetIO -> NetIOAssembler : Instantiate
+activate NetIOAssembler
+
+ConsensusNetIO -> ConsensusNetIO : Connect()
+[-> ConsensusNetIO : OnConnect()
+
+else TCP/IP server
+deactivate ConsensusNetIO
+deactivate NetIOAssembler
+
+PeerAcceptor -> PeerAcceptor : Accept()
+]-> PeerAcceptor : OnAccept()
+PeerAcceptor -> ConsensusNetIOManager : OnConnectionAccepted()
+ConsensusNetIOManager -> ConsensusNetIO : Instantiate
+activate ConsensusNetIO
+ConsensusNetIO -> NetIOAssembler : Instantiate
+activate NetIOAssembler
+
+end
+
+ConsensusNetIO -> ConsensusNetIOManager : BindIOChannel()
+ConsensusNetIOManager -> ConsensusManager : BindIOChannel()
+ConsensusManager -> ConsensusConnection : Instantiate
+activate ConsensusConnection
+ConsensusConnection -> ConsensusNetIO : AddConsensusConnection()
+
+
+@enduml

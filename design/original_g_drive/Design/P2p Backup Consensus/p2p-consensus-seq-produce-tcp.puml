@@ -1,0 +1,10 @@
+@startuml
+
+activate ConsensusNetIO
+activate BackupDelegate
+
+[o-> ConsensusNetIO : Asynchronously receive\nmessages from\nthe connected peer\nOnData()
+ConsensusNetIO -> ConsensusNetIO : AddToConsensusQueue()
+ConsensusNetIO -> BackupDelegate : ConsensusMsgSink::Push()
+
+@enduml

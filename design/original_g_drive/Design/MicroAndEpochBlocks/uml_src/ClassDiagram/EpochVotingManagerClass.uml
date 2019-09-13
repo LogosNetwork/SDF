@@ -1,0 +1,7 @@
+@startuml
+
+EpochVotingManager : logos::block_store store
+
+EpochVotingManager : GetNextEpochDelegates()
+EpochVotingManager : ValidateEpochDelegates()
+@enduml

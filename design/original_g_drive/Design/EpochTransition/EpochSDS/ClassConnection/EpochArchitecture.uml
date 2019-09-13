@@ -1,0 +1,43 @@
+@startuml
+class ConsensusContainer #yellow
+class PrimaryDelegate
+together {
+class PeerManager #grey
+class EpochConsensusManager
+class PeerAcceptor #red
+}
+class ConsensusManager
+EpochPeerManager "1" *-- PeerAcceptor
+PrimaryDelegate <|- ConsensusManager
+class ConsensusConnection
+class BatchBlockConsensusManager
+class MicroBlockConsensusManager
+ConsensusManager <|- BatchBlockConsensusManager
+ConsensusManager <|- MicroBlockConsensusManager
+ConsensusManager <|- EpochConsensusManager
+ConsensusConnection <|- BBConsensusConnection
+ConsensusConnection <|- MicroBlockConsensusConnection
+ConsensusConnection <|- EpochConsensusConnection
+
+class BBConsensusConnection
+class MicroBlockConsensusConnection
+class EpochConsensusConnection
+class ConsensusNetIOManager
+class ConsensusNetIO
+class EpochManager #lightblue
+class EpochPeerManager #lightblue
+PeerManager <|- EpochPeerManager
+ConsensusContainer "1" *-- "1-2" EpochManager
+ConsensusContainer "1" *-- "1" EpochPeerManager
+EpochManager "1" *-- "1" ConsensusNetIOManager
+EpochManager "1" *-- BatchBlockConsensusManager
+EpochManager "1" *-- MicroBlockConsensusManager
+EpochManager "1" *-- EpochConsensusManager
+ConsensusNetIOManager "1" *-- "32" ConsensusNetIO
+BatchBlockConsensusManager "1" *-- "32" BBConsensusConnection
+MicroBlockConsensusManager "1" *-- "32" MicroBlockConsensusConnection
+EpochConsensusManager "1" *-- "32" EpochConsensusConnection
+ConsensusNetIO -- BBConsensusConnection
+ConsensusNetIO -- MicroBlockConsensusConnection
+ConsensusNetIO -- EpochConsensusConnection
+@enduml

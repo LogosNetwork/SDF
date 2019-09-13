@@ -1,0 +1,125 @@
+@startuml
+
+Title Epoch Transition Classes
+
+package EpochTransition_Component{
+	
+	package ConsensusManagers{
+		interface ChannelBinder
+		ChannelBinder : BindIOChannel()
+		ChannelBinder <|-- ConsensusManager
+		
+		class ConsensusManager 
+		ConsensusManager : EpochEventsNotifier & events_notifier
+		ConsensusManager : UpdateRequestPromoter()
+		ConsensusManager : BindIOChannel()
+		ConsensusManager : MakeConsensusConnection()
+		
+		ConsensusManager <|-- BatchBlockConsensusManager
+		ConsensusManager "1" *-- "31" ConsensusConnection
+		
+		class ConsensusConnection
+		ConsensusConnection : EpochEventsNotifier & events_notifier
+		ConsensusConnection : OnConsensusMessage(PostCommit & message)
+		
+		class BatchBlockConsensusManager 
+		BatchBlockConsensusManager : EpochEventsNotifier & events_notifier
+		BatchBlockConsensusManager : OnPrePrepareRejected()		
+	}
+	
+	package ConsensusNetwork{
+		class ConsensusNetIOManager #lightgreen
+		ConsensusNetIOManager : EpochInfo & epoch_info
+		ConsensusNetIOManager : Connect()
+		ConsensusNetIOManager : OnConnectionAccepted()
+		ConsensusNetIOManager : BindIOChannel()
+
+		ConsensusNetIOManager "1" *-- "31" ConsensusNetIO
+		
+		interface PeerAcceptorStarter
+		PeerAcceptorStarter : Start()
+		PeerAcceptorStarter <|-- EpochPeerManager
+		
+		class EpochPeerManager #lightgreen 
+		EpochPeerManager : EpochInfo & epoch_info
+		EpochPeerManager : OnConnectionAccepted()
+		EpochPeerManager <|-- PeerAcceptor
+		 
+		class PeerAcceptor
+		PeerAcceptor : Accept()
+
+		class ConsensusNetIO
+		ConsensusNetIO : AsyncRead()
+		ConsensusNetIO : Send()
+	}
+	
+	class EventProposer #lightgreen
+	EventProposer : logos::alarm alarm
+	EventProposer : ConsensusContainer consensus 
+	EventProposer : Start()
+	EventProposer : ProposeEpoch()
+	
+	interface NewEpochEventHandler
+	NewEpochEventHandler : OnPostCommit()
+	NewEpochEventHandler : OnPrePrepareRejected()
+		
+	NewEpochEventHandler <|-- ConsensusContainer
+	
+	class ConsensusContainer #lightgreen
+	ConsensusContainer : EpochManager cur_epoch_manager
+	ConsensusContainer : EpochManager tran_epoch_manager
+	
+	ConsensusContainer : GetCurEpochNumber()
+	ConsensusContainer : SetCurEpochNumber()
+	ConsensusContainer : PeerBinder()
+	ConsensusContainer : EpochTransitionEventsStart()
+	ConsensusContainer : EpochTransitionStart()
+	ConsensusContainer : EpochStart()
+	ConsensusContainer : EpochTransitionEnd()
+	ConsensusContainer : TransitionPersistent()
+	ConsensusContainer : TransitionRetiring()
+
+	ConsensusContainer "1" *-- "1-2" EpochManager : create before\nnew epochs	
+	ConsensusContainer "1" *-- "1" Archiver 
+	ConsensusContainer "1" *-- "1" EpochPeerManager : accept delegate\nconnections
+ 	
+ 	class Archiver 
+ 	Archiver : Start()
+ 	
+ 	Archiver "1" *-- "1" EventProposer : propose timer based\nepoch transition events\nto ConsensusContainer
+ 	
+	interface EpochEventsNotifier
+    EpochEventsNotifier : OnPostCommit()
+    EpochEventsNotifier : OnPrePrepareRejected() 
+    EpochEventsNotifier : GetConnection() 
+    EpochEventsNotifier : GetEpochNumber() 
+    EpochEventsNotifier : GetTransitionStage()
+    EpochEventsNotifier : GetTransitionDelegateState()
+
+	EpochEventsNotifier <|-- EpochManager
+	
+	interface EpochInfo
+	EpochInfo : GetEpochNumber()
+	EpochInfo : GetConnectionState()
+	EpochInfo : bool IsWaitingDisconnect()
+	
+	EpochInfo <|-- EpochManager 
+	
+	class EpochManager #lightgreen
+	EpochManager : NewEpochEventHandler & new_epoch_handler
+	EpochManager : TransitionStage stage
+	EpochManager : TransitionDelegateState state
+	EpochManager : uint epoch_number
+	EpochManager : ConsensusManagers[] consensus_managers
+	EpochManager : ConsensusNetIOManager netio_manager
+	
+	EpochManager "1" *-- "1" ConsensusNetIOManager : initiate delegate\nconnections
+	EpochManager "1" *-- "1" ConsensusManagers : get everts:\n--new epoch# in post-commit\n--pre-prepare reject with NEW_EPOCH
+	
+}
+@enduml
+
+	EpochManager : DelegateKeyStore key_store
+	EpochManager : MessageValidator validator
+	ConsensusContainer : uint cur_epoch_number 
+	ConsensusContainer : EpochPeerManager peer_manager

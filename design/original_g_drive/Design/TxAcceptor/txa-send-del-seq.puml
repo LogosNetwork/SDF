@@ -1,0 +1,39 @@
+@startuml
+!pragma teoz true
+
+autonumber
+
+activate Client
+
+box "Client" #LightBlue
+    participant Client
+end box
+
+[o-> "logos::node" : on software startup\ncreate "logos::node"
+activate "logos::node"
+participant ConsensusContainer as CT <<TxChannel>>
+"logos::node" -> CT : create
+activate CT
+box "Delegate TxAcceptor"
+    participant "logos::node"
+    participant CT
+    participant ConsensusManager
+    participant TxAcceptor
+end box
+CT -> ConsensusManager : create
+activate ConsensusManager
+"logos::node" -> TxAcceptor : create TxAcceptor, get reference\nto ConsensusContainer as TxChannel
+activate TxAcceptor
+
+...
+TxAcceptor -> TxAcceptor : Accept(), accept client connections
+...
+Client -> TxAcceptor : OnAccept(), client connected
+TxAcceptor -> TxAcceptor : AsyncReadJson/Bin(), read transaction
+Client -> TxAcceptor : OnReadJson/Bin(), transaction is received
+TxAcceptor -> TxAcceptor : Validate()
+TxAcceptor -> Client : respond
+TxAcceptor -> CT : OnSendRequest()
+CT -> ConsensusManager : start consensus
+
+@enduml

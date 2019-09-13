@@ -1,0 +1,55 @@
+@startuml
+
+Title Primary Delegate Tally (Backup Message Handling Only)
+
+State PRIMARY_CONSENSUS_TALLY {
+    State PRE_PREPARE{ 
+	    PRE_PREPARE -down-> PRE_PREPARE_WAIT
+	    PRE_PREPARE_VALIDATE : Check sig, state
+	    PRE_PREPARE_TALLY : Count vote and stake
+	    PRE_PREPARE_TALLY : (For BSB, also start tallying reject and indirect support 
+	    PRE_PREPARE_TALLY : for each tx request once we see any Rejection)
+	    
+	    PRE_PREPARE_WAIT --> PRE_PREPARE_VALIDATE : **Prepare**
+	    PRE_PREPARE_WAIT --> PRE_PREPARE_VALIDATE : **Rejection**
+	    PRE_PREPARE_VALIDATE --> [*] : fail
+	    PRE_PREPARE_VALIDATE --> PRE_PREPARE_TALLY : pass
+	    PRE_PREPARE_TALLY --> PRE_PREPARE_WAIT : **Prepare**\nbut not yet at\n2f+1 quorum
+	    PRE_PREPARE_TALLY --> PRE_PREPARE_WAIT : **Rejection** but\nnot every tx request\nhas been cleared
+	    PRE_PREPARE_TALLY --> POST_PREPARE : **Prepare** and reached\n2f+1 quorum on whole batch;\nAtomically change state
+        PRE_PREPARE_TALLY --> PRE_PREPARE_REJECTED : **Prepare** and every tx\nrequest has been cleared
+        PRE_PREPARE_TALLY --> PRE_PREPARE_REJECTED : **Rejection** and every tx \nrequest has been cleared
+    }
+    
+    State PRE_PREPARE_REJECTED{
+        PRE_PREPARE_REJECTED : For BSBs, group indirectly approved
+        PRE_PREPARE_REJECTED : requests into subsets, seperated by
+        PRE_PREPARE_REJECTED : empty state block delimiter
+    }
+    
+    PRE_PREPARE_REJECTED --> STOP_ONGOING
+	
+    State POST_PREPARE{
+	    POST_PREPARE --> POST_PREPARE_WAIT
+	    
+	    POST_PREPARE_WAIT --> POST_PREPARE_VALIDATE : **COMMIT**
+	    POST_PREPARE_VALIDATE --> [*] : fail
+	    POST_PREPARE_VALIDATE --> POST_PREPARE_TALLY : pass
+	    POST_PREPARE_TALLY : Count vote and stake
+	    POST_PREPARE_TALLY --> POST_PREPARE_WAIT : **Commit**, but < 2f+1 quorum
+		POST_PREPARE_TALLY -down-> POST_COMMIT : **Commit** and reached\n2f+1 quorum on whole batch;\nAtomically change state
+	}
+    
+    State POST_COMMIT{
+	}
+	
+	POST_COMMIT -right-> STOP_ONGOING
+	
+	STOP_ONGOING : Turn off ongoing flag
+	STOP_ONGOING --> [*] : primary waiting list is empty\nand/or another consensus\nround started
+	
+	STOP_ONGOING -right-> START_ONGOING : primary waiting list not empty\nand no other primary\nconsensus round is ongoing
+    START_ONGOING : Turn on ongoing flag
+    START_ONGOING -up-> PRE_PREPARE
+}
+@enduml

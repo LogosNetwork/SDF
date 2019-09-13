@@ -1,0 +1,47 @@
+@startuml
+
+Title EpochManager Transition 
+
+participant EventProposer
+participant ConsensusContainer
+participant "EpochManager:current_epoch" as current_epoch
+participant "EpochManager:transition_epoch" as transition_epoch
+activate EventProposer
+activate ConsensusContainer
+activate current_epoch
+create current_epoch
+ConsensusContainer -> current_epoch : Create on node start
+current_epoch -> current_epoch : Connect to peers
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> current_epoch : Transaction
+current_epoch -> current_epoch : Consensus (Primary and Backup Delegate)
+loop every 12 hours
+EventProposer -> ConsensusContainer : StartEpochTransactionsEvents (T-5min)
+create transition_epoch
+ConsensusContainer -> transition_epoch
+activate transition_epoch
+transition_epoch -> transition_epoch : Connect to peers
+...
+EventProposer -> ConsensusContainer : StartEpochTransition (T-20sec)
+transition_epoch -> transition_epoch : Consensus (Backup Delegate Only)
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> current_epoch : Transaction
+current_epoch -> current_epoch : Consensus (Primary and Backup Delegate)
+...
+EventProposer -> ConsensusContainer : StartEpoch (T: 00:00)
+note right : Or earlier if:\n(1) EpochManager:current_epoch::OnPreprepareRejected(NEW_EPOCH), or\n(2) EpochManager:transition_epoch::OnPostCommitReceived()
+
+transition_epoch <-[#0000FF]-> current_epoch : Swap current_epoch with transition_epoch
+
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> current_epoch : Transaction
+current_epoch -> current_epoch : Consensus (Primary and Backup Delegate)
+transition_epoch -> transition_epoch : Consensus (Backup Delegate Only)
+...
+EventProposer -> ConsensusContainer : EndEpochTransition (T+20sec)
+deactivate transition_epoch
+end
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> current_epoch : Transaction
+current_epoch -> current_epoch : Consensus (Primary and Backup Delegate)
+@enduml

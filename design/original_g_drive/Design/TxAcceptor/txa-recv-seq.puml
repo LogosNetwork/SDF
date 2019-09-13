@@ -1,0 +1,64 @@
+@startuml
+!pragma teoz true
+
+autonumber
+
+activate TxAcceptor
+
+box "Standalone TxAcceptor" #LightBlue
+    participant TxAcceptor
+end box
+
+'create "logos::node"
+activate "logos::node"
+[-> "logos::node" : create "logos::node" on startup
+
+participant ConsensusContainer as CT <<TxChannel>>
+
+box "Delegate node"
+    participant "logos::node"
+    participant CT
+    participant ConsensusManager
+    participant TxReceiver
+    participant TxReceiverChannel
+end box
+"logos::node" -> CT : create
+activate CT
+
+"logos::node" -> TxReceiver : create
+activate TxReceiver
+
+
+CT -> ConsensusManager : create
+activate ConsensusManager
+
+TxReceiver -> TxReceiverChannel : create TxReceiverChannel\nfor each configured\nstandalone TxAcceptor
+activate TxReceiverChannel
+TxReceiverChannel -> TxReceiverChannel : Connect()
+...
+TxAcceptor -> TxReceiverChannel : OnConnect(), delegate connected to TxAcceptor
+TxReceiverChannel -> TxReceiverChannel : start heart beat timer
+
+TxReceiverChannel -> TxReceiverChannel : AsyncRead()
+...
+TxAcceptor -> TxReceiverChannel : OnRead(), transaction(s) received from TxAcceptor
+TxReceiverChannel -> CT : OnSendRequest()
+CT -> ConsensusManager : OnSendRequest()
+...
+]-> TxReceiverChannel : OnTimeout()
+alt if inactive for 60 seconds
+    TxReceiverChannel -> TxReceiverChannel : close connection
+    TxReceiverChannel -> TxReceiverChannel : Connect()
+    ...
+    TxAcceptor -> TxReceiverChannel : OnConnect(), connected to TxAcceptor
+end
+...
+alt if network error
+    TxReceiverChannel -> TxReceiverChannel : close connection
+    TxReceiverChannel -> TxReceiverChannel : Connect()
+    ...
+    TxAcceptor -> TxReceiverChannel : OnConnect(), connected to TxAcceptor
+end
+
+@enduml
+

@@ -1,0 +1,10 @@
+@startuml
+
+
+PrimaryDelegate <|-down- ConsensusManager
+ConsensusManager *-down- ConsensusConnection1
+ConsensusManager *-down- ConsensusConnection2
+ConsensusManager *-down- OtherConsensusConnections
+ConsensusManager *-down- "ConsensusConnection_n-1"
+
+@enduml

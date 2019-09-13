@@ -1,0 +1,58 @@
+@startuml
+!pragma teoz true
+
+autonumber
+
+box "Standalone TxAcceptor"
+participant TxAcceptor
+participant TxAcceptorChannel
+end box
+
+[o-> TxAcceptor : on software startup\ncreate TxAcceptor with\nno other software\ninstantiated
+activate TxAcceptor
+TxAcceptor -> TxAcceptorChannel : create TxAcceptorChannel
+activate TxAcceptorChannel
+TxAcceptorChannel -> TxAcceptorChannel : start _heartbeat_timer
+group Accept
+loop while not connected delegate
+    TxAcceptorChannel -> TxAcceptorChannel : Accept()
+    ...
+
+    box "Delegate Node" #LightBlue
+    participant Delegate
+    end box
+    Delegate -> TxAcceptorChannel : OnAccept(), a delegate connected
+    TxAcceptorChannel -> TxAcceptorChannel : ValidateDelegate()
+    alt if delegate is invalid
+        TxAcceptorChannel -> TxAcceptorChannel : close connection
+    end
+end
+end
+
+...
+TxAcceptor -> TxAcceptor : Accept()
+...
+box "Client" #LightBlue
+participant Client
+end box
+Client -> TxAcceptor : OnAccept(), a client connected
+TxAcceptor -> TxAcceptor : AsyncReadJson/Bin(), read transaction
+Client -> TxAcceptor : OnReadJson/Bin(), transaction is received
+TxAcceptor -> TxAcceptor : Validate()
+TxAcceptor -> Client : Respond to client
+TxAcceptor -> TxAcceptorChannel : OnSendRequest()
+TxAcceptorChannel -> TxAcceptorChannel : AsyncWrite()
+Delegate -> TxAcceptorChannel : OnWrite()
+...
+]-> TxAcceptorChannel : OnTimeout()
+alt if >= 40 seconds since last message sent
+    TxAcceptorChannel -> TxAcceptorChannel : AsyncWrite(), empty transaction
+    ]-> TxAcceptorChannel : OnWrite()
+end
+...
+
+alt if network error
+    TxAcceptorChannel -> TxAcceptorChannel : close connection, go to Accept
+end
+
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+
+activate P2pSubsystem
+activate ConsensusContainer
+activate ConsensusManager
+activate ContainerP2p
+activate BackupDelegate
+
+[o-> P2pSubsystem : PROPAGATE message\nis received from P2p\n
+P2pSubsystem -> ConsensusContainer : OnP2pReceive()
+alt : if Post_Committed_Block
+    ConsensusContainer -> ContainerP2p : ProcessInputMessage()
+else
+    ConsensusContainer -> ConsensusManager : AddToConsensusQueue()
+    ConsensusManager -> BackupDelegate : ConsensusMsgSink::Push()
+end
+
+@enduml

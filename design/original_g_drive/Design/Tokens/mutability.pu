@@ -1,0 +1,96 @@
+@startuml
+
+autonumber
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+actor "Bob\n(Token User)" as tu
+actor "Token Issuer/Controller\n(Address: 0xDEADBEEF)" as ti
+collections "Delegates" as d
+database "Token Account Database" as db
+
+ti -> d : Submit a request to issue a new token: //MyCoin//
+note left
+    Within this request, the token issuer specifies
+    the token account settings as well as the list
+    of token account controllers.
+end note
+
+d -> d : Validate request
+d -> db : Add MyCoin entry to database.
+
+note right of db
+    MyCoin Entry:
+        Allow Adjust Fee: True
+        Allow Adjust Fee Mutable: True
+        Token Fee Type: Flat Rate
+        Token Fee Value: 5
+        Controllers:
+            0xDEADBEEF
+
+        Other Settings...
+
+end note
+
+d -> ti : Send hash of newly created token account
+
+ti -> d : Submit a request to update the token fee - set it to 10 tokens.
+
+d -> d : Validate request
+d -> db : Update token fee
+
+note right of db
+    MyCoin Entry:
+        Allow Adjust Fee: True
+        Allow Adjust Fee Mutable: True
+        Token Fee Type: Flat Rate
+        Token Fee Value: 10
+        Controllers:
+            0xDEADBEEF
+
+        Other Settings...
+
+end note
+
+ti -> d : Submit request to disable token adjustment and make this setting immutable.
+
+note left
+    Once this request is approved, the change will be
+    irreversible.
+end note
+
+d -> d : Validate request
+d -> db : Update token fee settings
+
+note right of db
+    MyCoin Entry:
+        Allow Adjust Fee: False
+        Allow Adjust Fee Mutable: False
+        Token Fee Type: Flat Rate
+        Token Fee Value: 10
+        Controllers:
+            0xDEADBEEF
+
+        Other Settings...
+
+end note
+
+ti -> d : Submit request to update token fee to 20 tokens
+d -> ti : Reject request as 'Allow Adjust Fee' is false
+
+ti -> d : Submit request to set 'Allow Adjust Fee to true'
+d -> ti : Reject request as this setting is immutable
+
+ti -> d : Submit request to make 'Allow Adjust Fee' setting mutable.
+d -> ti : Reject request as immutability cannot be undone.
+
+note left of ti
+    At this point there is nothing any controller can do
+    to modify the token fee. Once a token account setting
+    has been made immutable, it cannot be set to mutable
+    again. The token fee for   //MyCoin// will forever be
+    locked in at a flat fee of 20 tokens.
+end note
+
+@enduml

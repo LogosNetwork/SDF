@@ -1,0 +1,31 @@
+@startuml
+
+Title Delegate-Retiring_i
+
+[*] --> MESSAGE_RECEIVED 
+
+State MESSAGE_RECEIVED{
+	MESSAGE_RECEIVED : As defined in the delegate overview diagram, with an additional state "TRANSITION"
+	
+	MESSAGE_RECEIVED --> TRANSITION : received pre-prepare reject with an error code NEW_EPOCH\nand clock >= Epoch-transition-start-time_i 
+	
+	State TRANSITION {
+		TRANSITION --> FORWARD: received a transaction request		
+		FORWARD : forward the request to its first primary in epoch_i
+		FORWARD -->[*]
+		TRANSITION --> MESSAGE_RECEIVED : other messages
+	}	
+}
+
+@enduml
+
+note "Clock-diff-max: the maximum clock difference allowed among delegates." as N2
+note "Epoch-start-time_i: the starting time of the epoch_i." as N3
+note "Epoch-transition-period_i: [Epoch-start-time_i - Clock-diff-max, Epoch-start-time_i + Clock-diff-max]" as N4
+note "Epoch-transition-start-time_i: Epoch-start-time_i - Clock-diff-max" as N5
+note "Epoch-transition-end-time_i: Epoch-start-time_i + Clock-diff-max" as N6
+note "Delegate_epoch_i: a delegate of epoch_i." as N7
+note "Delegate-new_epoch_i: a node added to the set of delegates at the beginning of epoch_i" as N8
+note "Delegate-retired_epoch_i: a delegate of epoch_{i-1}, but not longer in epoch_i. " as N9
+note "Delegate-existing_epoch_i: (TODO better name) the set of delegate_epoch_i - the set of delegates-new_epoch_i." as N10
+note "E#_i: epoch number i in consensus messages" as N11

@@ -1,0 +1,87 @@
+@startuml
+
+Title Backup Delegate
+
+'note "TODO careful with the lock (AKA reserve)\nTODO missing messages?? " as N1
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+[*] --> PRE_PREPARE_RECEIVED : received a pre-prepare
+	
+	'note right of BACKUP_CONSENSUS
+	'Backup delegates should not receive prepare or commit
+	'for a regular consensus session. Receiving those messages,
+	'a backup delegate will save them, and use them at 
+	'the *_WAIT states in FALLBACK_CONSENSUS
+	'end note
+	
+State POST_COMMIT_RECEIVED{
+}
+	
+
+State BACKUP_CONSENSUS {  
+
+	note "Backup delegates should not receive prepare or commit\nfor a regular consensus session. Receiving those messages,\na backup delegate will save them, and use them at\nthe *_WAIT states in FALLBACK_CONSENSUS if needed" as N2
+    State COMMIT{
+    	COMMIT : sign and send commit to primary    	 
+	    COMMIT --> POST_COMMIT_WAIT 	    	    
+	}
+    
+    State POST_COMMIT_WAIT{
+	   	POST_COMMIT_WAIT : set a POST_COMMIT timer   
+	   	POST_COMMIT_WAIT --> FALLBACK_CONSENSUS : timer expired
+	    POST_COMMIT_WAIT --> POST_COMMIT_RECEIVED : Received post_commit
+    }
+    
+    State PREPARE{
+        'PREPARE : for every request, reserve the account by the requesst     
+	    PREPARE : create prepare message and sign
+	    PREPARE : send the prepare the primary
+	    'PREPARE : set a PREPARE timer 
+	    PREPARE --> PREPARE_WAIT 
+	    ': some valid requests
+	    'PREPARE --> [*] : all requests are bad
+	    
+	    PREPARE_WAIT : set a PREPARE timer
+	    PREPARE_WAIT --> FALLBACK_CONSENSUS : timer expired 
+	    'PREPARE_WAIT --> DROP : Received an abort\n from primary
+		PREPARE_WAIT --> COMMIT : Received valid post_prepare\n from primary
+		PREPARE_WAIT --> POST_COMMIT_RECEIVED : Received post_commit
+		PREPARE_WAIT --> PRE_PREPARE_RECEIVED : Received a pre-prepare and\nthe batch in the message is\n a retry-batch, i.e. a strict\nsubset of the current batch
+    }
+	
+	State PRE_PREPARE_REJECTED{
+		PRE_PREPARE_REJECTED : create a signed reject message and send it to the primary.
+    }
+    
+	PRE_PREPARE_REJECTED -left-> [*] 
+	
+    State PRE_PREPARE_RECEIVED{
+    	PRE_PREPARE_RECEIVED : check primary signature
+    	PRE_PREPARE_RECEIVED : for every request in batch, check blacklist, POW, reserved, account signature, prev-hash, etc
+	    
+	    PRE_PREPARE_RECEIVED --> SLASH : slashing condition
+	    PRE_PREPARE_RECEIVED --> PREPARE : all requests in the batch are good
+	    ': some valid requests	    
+	    PRE_PREPARE_RECEIVED --> GAP_IN_ACCOUNT_CHAIN : unknown prev-hash
+	    PRE_PREPARE_RECEIVED -left-> PRE_PREPARE_REJECTED : some bad requests
+	    '[*] : other errors
+	    
+	    GAP_IN_ACCOUNT_CHAIN: Start Bootstrap Protocol
+    	'GAP_IN_ACCOUNT_CHAIN --> [*]	       	
+    	
+    	SLASH : Record the evidence
+    	SLASH : Start the slashing protocol
+    	'SLASH --> [*]
+    }
+        
+    State FALLBACK_CONSENSUS {
+	    FALLBACK_CONSENSUS : During fallback consensus, the pre-prepare is added
+	    FALLBACK_CONSENSUS : to the primary list, and the pre-prepare is re-proposed.
+	    FALLBACK_CONSENSUS : See the FALLBACK_CONSENSUS sequence diagram for details.
+	}
+}
+
+
+@enduml

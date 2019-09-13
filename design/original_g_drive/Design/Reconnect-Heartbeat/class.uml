@@ -1,0 +1,44 @@
+@startuml
+
+class NetIOErrorHandler {
+    OnNetIOError(error, delegate_id)
+}
+
+class ConsensusNetIOManager {
+    void OnNetIOError(error, delegate_id)
+    void ScheduleInactivityTimer()
+    void OnInactivityTimeout()
+    deadline_timer  _inactivity_timer
+}
+
+class ConsensusNetIO {
+    uint64_t            _last_received
+    NetIOErrorHandler   _netio_error_callback
+    void OnHeartBeat(const HeartBeat&)
+}
+
+class NetIOAssembler {
+    NetIOErrorHandler   _netio_error_callback
+}
+
+class ConsensusManager {
+    void OnNetIOError(delegate_id)
+}
+
+class HeartBeat {
+    bool is_request
+}
+
+class MessageHeader
+
+MessageHeader <|-- HeartBeat
+
+NetIOErrorHandler <|-- ConsensusNetIOManager
+
+ConsensusNetIOManager "1" o-- "31" ConsensusNetIO
+
+ConsensusNetIO "1" o-- "1" NetIOAssembler
+
+ConsensusNetIOManager -- ConsensusManager
+
+@enduml

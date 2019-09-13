@@ -1,0 +1,18 @@
+@startuml
+abstract ConsensusManager
+ConsensusManager <|-- EpochConsensusManager
+
+EpochConsensusManager : ArchiverEpochHandler Epoch_handler
+
+EpochConsensusManager : ApplyUpdates()
+EpochConsensusManager : Validate()
+EpochConsensusManager : QueueRequestPrimary()
+EpochConsensusManager : PrePrepareGetNext()
+EpochConsensusManager : PrePreparePopFront()
+EpochConsensusManager : PrePrepareQueueEmpty()
+EpochConsensusManager : PrePrepareQueueFull()
+EpochConsensusManager : PrimaryContains()
+EpochConsensusManager : QueueRequestSecondary()
+EpochConsensusManager : MakeConsensusConnection()
+
+@enduml

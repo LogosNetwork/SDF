@@ -1,0 +1,127 @@
+@startuml
+
+abstract class TxChannel {
+    OnSendRequest(transaction)
+}
+
+class PeerAcceptor
+class PeerManager {
+    OnConnectionAccepted(endpoing, socket)
+}
+
+class TxPeerManager {
+    PeerAcceptor _peer_acceptor
+    Reader _reader
+}
+
+PeerManager <|- TxPeerManager
+TxPeerManager "1" o-- "1" PeerAcceptor
+
+class TxAcceptorChannel {
+    Socket _socket
+    bool Validate()
+    OnTimeout()
+    OnSendRequest(transaction)
+    OnConnectionAccepted()
+    ScheduleTimer()
+    string _ip
+    uint16_t port
+    Timer _heartbeat_timer
+    unt64_t _last_sent
+    PeerAcceptor _peerAcceptor
+}
+
+PeerManager <|-- TxAcceptorChannel
+TxAcceptorChannel "1" o-- "1" PeerAcceptor
+
+TxChannel <|-- TxAcceptorChannel
+
+class TxAcceptor {
+    AsyncReadJson()
+    AsyncReadBin()
+    Validate(transaction)
+    RespondJson()
+    RespondBin()
+    ProcessBlock()
+    PostProcessBlock()
+    OnSendRequest()
+    TxChannel _channel
+    TxPeerManager _json_peer
+    TxPeerManager _bin_peer
+    TxChannel _acceptor_channel
+    TxAcceptorConfig _config
+}
+
+TxAcceptor "1" o-- "1" TxChannel
+TxAcceptor "1" o-- "2" TxPeerManager
+
+class TxAcceptorStandalone {
+}
+
+class TxAcceptorDelegate {
+    PostProcessBlocks()
+    OnSendRequest()
+}
+
+TxAcceptor <|- TxAcceptorStandalone
+TxAcceptor <|- TxAcceptorDelegate
+
+abstract class TxReceiver {
+    vector<TxChannel>   _channels
+    TxChannel & _receiver
+    Connect()
+    OnConnect()
+}
+
+class TxReceiverChannel {
+    TxChannel & _receiver
+    Connect()
+    OnConnect()
+    AsyncReadHeader()
+    AsyncReadMessage()
+    OnTimeout()
+    ScheduleTimer()
+    string _ip
+    uint16_t _port
+    Timer _heartbeat_timer
+    TxReceiverNetIOAssembler _assembler
+}
+
+TxChannel <|-- ConsensusContainer
+TxReceiver "1" o-- "*" TxReceiverChannel
+
+class ConsensusContainer {
+    TxReceiver _receiver
+    OnSendRequest(transaction)
+}
+
+ConsensusContainer "1" o-- "1" TxReceiver
+
+TxAcceptor . TxReceiver
+
+class NetIOSend {
+    AsyncSend()
+    AsyncSendBuffered()
+    Reset()
+    OnError()
+    Socket _socket
+    mutex _send_mutex
+    QueuedWrites _queued_writes
+    uint32_t _queue_reservation
+    bool sending
+}
+
+NetIOSend <|- TxAcceptorChannel
+
+class NetIOAssembler {
+}
+
+class TxReceiverNetIOAssembler {
+    OnError()
+}
+
+NetIOAssembler <|- TxReceiverNetIOAssembler
+
+TxReceiverChannel "1" o-- TxReceiverNetIOAssembler
+
+@enduml

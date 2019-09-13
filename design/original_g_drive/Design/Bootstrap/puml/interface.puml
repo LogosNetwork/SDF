@@ -1,0 +1,33 @@
+@startuml
+package bootstrap {
+   class bootstrap_listener
+   class bootstrap_server
+   class bootstrap_initiator
+   class bootstrap_attempt
+   class bootstrap_client
+}
+
+package tips {
+   class tips_req_client
+   class tips_req_server
+}
+
+package bulk_pull {
+   class bulk_pull_client
+   class bulk_pull_server
+}
+
+package BatchBlock {
+   class validator
+}
+
+package Database{
+class logos::block_store
+}
+
+'bootstrap bootstrap_server -- tips tips_req_server
+bootstrap -- tips : call to get tips
+bootstrap -- bulk_pull : request each chain if behind
+bulk_pull -- BatchBlock : call Validate/ApplyUpdate
+BatchBlock -- Database : write to DB after validation
+@enduml

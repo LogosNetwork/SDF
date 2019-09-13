@@ -1,0 +1,11 @@
+@startuml
+
+activate ConsensusP2pBridge
+activate ConsensusManager
+
+[o-> ConsensusP2pBridge : Enable p2p
+ConsensusManager -> ConsensusManager: Start 60 sec timer\nonce p2p is enabled
+...
+[-> Co
+
+@enduml

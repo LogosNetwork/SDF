@@ -1,0 +1,134 @@
+@startuml
+
+Title Add Consensus Blocks to the Cache
+
+autonumber "<b>[00]"
+
+actor "P2P/Bootstrap" as p2p
+
+box "Cache_Component" #LightBlue
+	participant Cache as sig
+	collections PendingBlockChains as chains
+	participant DependencyTable as table
+	participant BlockWriteQueue as q
+end box
+
+participant NonDelegatePersistencyManager as persis
+database BlockDatabase as db
+participant InvalidBlockHandler
+
+p2p -> sig : AddBlock
+sig -> persis : VerifyAggregatedSignatures
+persis -> db : retrieve epoch block if needed
+
+alt valid signatures
+	sig -> chains : insert to a chain
+	
+	alt 1st block on a chain
+		
+		chains -> persis : validate
+		
+		persis -> db : retrieve existing block info if needed
+		alt validated
+			 
+			chains -> q : append
+			alt only 1 block in BlockWriteQueue
+			
+				note over q : more blocks could be appended to the queue while writing to DB
+				
+				loop till BlockWriteQueue is empty
+					q -> db : store
+					q -> table : search block with dependency cleared
+					q -> chains : get next block on the same chain
+					ref over table
+						for any blocks found in the 2 operations above, 
+						try to validate them, i.e., goto step [05] validate 
+					end ref					
+				end
+			
+			else more than 1 blocks in BlockWriteQueue
+				note over q 
+				Simply return. The block will be written to the DB by another thread
+				that is currently writing an earlier block in the queue.
+				end note
+			end
+			
+		else missing reliance
+			chains -> table : add reliance
+		
+		else bad block
+			chains -> chains : log and remove the block from chain
+			chains -> InvalidBlockHandler : handle bad block
+			note left of InvalidBlockHandler : yet to be designed
+		
+		end
+		
+			
+	else not 1st block on a chain
+		note over chains
+			simply return, the block cannot be validated 
+			since it depends on earlier blocks on the same chain
+			end note   
+	end
+	
+	chains -> p2p : return true
+else invalid signatures
+ 	sig -> p2p : return false
+end
+@enduml
+
+
+loop only if clear any entries in the DependencyTable
+				
+				note over chains
+					after a block is stored to DB, we will try to see if the block can be used 
+					to clear any entries in the DependencyTable, if so we will continue.
+				end note
+			end
+			
+			
+			
+, we will try to see if the block can be used to clear any entries in the DependencyTable, if so we will try to continue.
+activate EventProposer
+activate ConsensusContainer
+activate current_epoch
+
+
+participant "EpochManager:current_epoch" as current_epoch
+participant "EpochManager:transition_epoch" as transition_epoch
+
+create current_epoch
+ConsensusContainer -> current_epoch : Create on node start
+current_epoch -> current_epoch : Connect to peers
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> current_epoch : Transaction
+current_epoch -> current_epoch : Consensus (Primary and Backup Delegate)
+loop every 12 hours
+EventProposer -> ConsensusContainer : StartEpochTransactionsEvents (T-5min)
+create transition_epoch
+ConsensusContainer -> transition_epoch
+activate transition_epoch
+transition_epoch -> transition_epoch : Connect to peers
+...
+EventProposer -> ConsensusContainer : StartEpochTransition (T-20sec)
+transition_epoch -> transition_epoch : Consensus (Backup Delegate Only)
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> current_epoch : Transaction
+current_epoch -> current_epoch : Consensus (Primary and Backup Delegate)
+...
+EventProposer -> ConsensusContainer : StartEpoch (T: 00:00)
+note right : Or earlier if:\n(1) EpochManager:current_epoch::OnPreprepareRejected(NEW_EPOCH), or\n(2) EpochManager:transition_epoch::OnPostCommitReceived()
+
+transition_epoch <-[#0000FF]-> current_epoch : Swap current_epoch with transition_epoch
+
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> current_epoch : Transaction
+current_epoch -> current_epoch : Consensus (Primary and Backup Delegate)
+transition_epoch -> transition_epoch : Consensus (Backup Delegate Only)
+...
+EventProposer -> ConsensusContainer : EndEpochTransition (T+20sec)
+deactivate transition_epoch
+end
+[-> ConsensusContainer : Transaction
+ConsensusContainer -> current_epoch : Transaction
+current_epoch -> current_epoch : Consensus (Primary and Backup Delegate)

@@ -1,0 +1,49 @@
+@startuml
+
+activate node
+activate ContainerP2p
+activate DelegateIdentityManager
+activate ConsensusP2pOutput
+
+[o-> node : on node start up
+node -> DelegateIdentityManager : IdentifyDelegates()
+group CheckDelegateAddresses
+alt doesn't have every delegate's address and (delegate in current epoch or \n\
+the delegate in next epoch and current time is less than)\n\
+epoch start - 60 min
+    DelegateIdentityManager -> ConsensusP2pOutput : RequestDelegateAddresses()
+    DelegateIdentityManager -> DelegateIdentityManager : SchedulePeerAddrRequest(10min)
+    ...
+    ContainerP2p -> DelegateIdentityManager : OnPeerAddrRequest()
+    DelegateIdentityManager -> DelegateIdentityManager : UpdateDelegateAddressDB()
+    alt delegate current epoch
+        DelegateIdentityManager -> ConsensusContainer : ConnectToPeer ()
+        [o-> DelegateIdentityManager : Connected peer sends it's IP/port
+        DelegateIdentityManager -> DelegateIdentityManager : UpdateDelegateAddressDB()
+    end
+    [o-> DelegateIdentityManager : PeerAddrRequest()
+    DelegateIdentityManager -> DelegateIdentityManager : ** CheckDelegateAddress **
+end
+end
+
+ContainerP2p -> DelegateIdentityManager : OnAddressAd()
+alt if current or next epoch
+    DelegateIdentityManager -> DelegateIdentityManager : UpdateDelegateAddressDB()
+    alt if current epoch
+        DelegateIdentityManager -> ConsensusContainer : ConnectToPeer()
+        [o-> DelegateIdentityManager : Connected peer sends it's IP/port
+        DelegateIdentityManager -> DelegateIdentityManager : UpdateDelegateAddressDB()
+    end
+end
+
+ContainerP2p -> DelegateIdentityManager : OnAddressAdTxAcceptor()
+alt if current or next epoch
+    DelegateIdentityManager -> DelegateIdentityManager : UpdateTxAcceptorAddressDB()
+end
+
+...
+
+[o-> DelegateIdentityManager : OnEpochTransitionEnd()
+DelegateIdentityManager -> DelegateIdentityManager : DeleteDelegateAddressDB(epoch_number),\nDelegateTxAcceptorAddressDB(epoch_number)
+
+@enduml

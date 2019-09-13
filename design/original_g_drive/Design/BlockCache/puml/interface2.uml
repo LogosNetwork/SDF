@@ -1,0 +1,40 @@
+@startuml
+
+package Cache_Component #lightgreen{
+
+class Cache
+
+class PendingBlockContainer
+
+class BlockWriteQueue
+
+Cache --> BlockWriteQueue : store blocks
+Cache --> PendingBlockContainer : cache blocks
+
+}
+
+package Consensus{}
+
+package Database{}
+
+package Recall{}
+
+package P2P {}
+
+package Bootstrap {}
+
+
+class NonDelegatePersistentManager 
+
+NonDelegatePersistentManager --> Database : read existing blocks' information
+
+Bootstrap --> Cache : validate and store blocks
+Consensus --> Cache : store blocks
+P2P --> Cache : validate and store blocks
+
+BlockWriteQueue --> Database : write blocks to DB
+Cache --> NonDelegatePersistentManager : validate blocks
+
+Cache_Component --> Recall : handle invalid blocks with\n valid aggregated signatures
+
+@enduml

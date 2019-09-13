@@ -1,0 +1,58 @@
+@startuml
+
+Title Delegate-Persistent
+
+[*] --> OldEpochManagerOnly
+
+State Working{
+	Working : Use the EpochManager(s) and participate in consensus sessions
+	note "A persistent delegate does not stop working.\nIt has an old EpochManager and a new EpochManager during epoch transition.\nAny of them can be a backup delegate.\nOnly one of them can propose pre-prepares." as N3
+	
+	State OldEpochManagerOnly{
+		OldEpochManagerOnly : only the old EpochManager exists
+		OldEpochManagerOnly --> NewEpochManagerWait
+	
+		State NewEpochManagerWait{
+			NewEpochManagerWait : Set new EpochManager timer
+		}
+	}
+	
+	NewEpochManagerWait --> OnlyOldEpochManagerPropose : new EpochManager timer expired
+	
+	State OnlyOldEpochManagerPropose{
+		OnlyOldEpochManagerPropose : the old EpochManager works as usual.
+		OnlyOldEpochManagerPropose : a new EpochManager is created.
+		OnlyOldEpochManagerPropose : the new EpochManager has about 5 minutes to connect to it peer delegates
+		OnlyOldEpochManagerPropose : after that the new EpochManager can be a backup delegate, but cannot propose
+		
+		OnlyOldEpochManagerPropose --> EpochWait
+		
+		State EpochWait{
+			EpochWait : Set epoch start timer
+		}	
+	}
+	
+	EpochWait --> OnlyNewEpochManagerPropose : epoch start timer expires
+	EpochWait --> OnlyNewEpochManagerPropose : pre-prepare rejected due to\nerror code NEW_EPOCH from > 1/3 peer delegates
+	EpochWait --> OnlyNewEpochManagerPropose : received a post-commit with \nnew epoch number
+	
+	State NewEpochManagerOnly{
+		NewEpochManagerOnly : the new EpochManager works as usual.
+		NewEpochManagerOnly : the old EpochManager Stop being a delegate and disconnect from peer delegates
+	}
+	
+	State OnlyNewEpochManagerPropose{
+		OnlyNewEpochManagerPropose : the new EpochManager can propose pre-prepares
+		OnlyNewEpochManagerPropose : the old EpochManager stops proposing pre-prepares
+		OnlyNewEpochManagerPropose : the old EpochManager still participates in consensus sessions as a backup delegate
+		
+		OnlyNewEpochManagerPropose --> OldEpochManagerDisconnectWait
+		
+		State OldEpochManagerDisconnectWait{
+			OldEpochManagerDisconnectWait : Set old EpochManager disconnect timer		
+	}
+	
+	OldEpochManagerDisconnectWait --> NewEpochManagerOnly : old EpochManager disconnect timer expires.	
+}
+
+@enduml

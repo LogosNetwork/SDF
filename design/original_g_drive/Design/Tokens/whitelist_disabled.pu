@@ -1,0 +1,53 @@
+@startuml
+
+autonumber
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+actor "Bob\n(Token User)" as tu
+actor "Tom\n(Token User)" as tu2
+actor "Client\n(Token Issuer/Controller)" as ti
+collections "Delegates" as d
+database "Account Database" as db
+note right of db
+    Bob's Account:
+        Total Balance: xxx
+        Other Fields...
+end note
+
+tu -> tu2 : Agree to receive 100 //OpenCoin// tokens from Tom
+
+tu2 -> d : Initiate request to send 100 //OpenCoin// tokens to Bob
+
+d -> d : Validate request
+d -> db : Add //OpenCoin// to Bob's account\nin the databse
+note right of db
+Bob's Account:
+    Total Balance: xxx
+    Other Fields...
+    //OpenCoin// Account:
+        Balance: 0
+        Bitfield:
+            Whitelisted: *Ignored*
+            Other Fields...
+end note
+
+d -> db : Update Bob's //OpenCoin// balance
+note right of db
+Bob's Account:
+    Total Balance: xxx
+    Other Fields...
+    //OpenCoin// Account:
+        Balance: 100
+        Bitfield:
+            Whitelisted: *Ignored*
+            Other Fields...
+end note
+
+note left
+    At this point Bob has an active balance of  //OpenCoin//
+    tokens and can initiate transactions with other users.
+end note
+
+@enduml

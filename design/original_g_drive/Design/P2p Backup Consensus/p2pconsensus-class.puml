@@ -1,0 +1,92 @@
+@startuml
+
+abstract class ConsensusMsgProducer {
+    {abstract} + AddToConsensusQueue(data, ver, mt, ct, pld_sz, delid=0xff)
+}
+
+abstract class ConsensusP2pBridge {
+    ConsensusP2pOutput _consensus_p2p
+    deadlock_timer _timer
+    bool _enable_p2p
+    Enable(enable)
+    Broadcast(data, size)
+    SendP2p(data, size, mt)
+    {abstract} + OnTimeout()
+}
+
+class ConsensusP2pOutput
+
+ConsensusP2pBridge o-- ConsensusP2pOutput
+
+class ConsensusManager {
+}
+note top of ConsensusManager : Producer,\nreceives via P2p
+
+ConsensusP2pBridge <|-- ConsensusManager
+ConsensusMsgProducer <|-- ConsensusManager
+
+class ConsensusNetIO
+note bottom of ConsensusNetIO : Producer,\nreceives via TCP/IP
+
+ConsensusMsgProducer <|--ConsensusNetIO
+ConsensusNetIO o-- BackupDelegate
+
+class BackupDelegate {
+}
+
+note left of BackupDelegate : Message sink/Producer\n\
+and async consumer
+
+ConsensusP2pBridge <|-- DelegateBridge
+ConsensusManager "1" o-- "31" BackupDelegate
+
+class MessagePrequel
+
+class Message {
+    MessageType message_type
+    shared_ptr<MessageBase> message
+}
+
+MessageBase <|-- MessagePrequel
+Message o-- MessageBase
+
+class ConsensusMsgSink {
+    std::queue _msg_queue
+    mutex _queue_mutex
+    bool consuming
+    std::map<del_id,(p2pcnt,dircnt)> _msg_cnt;
+    Push(data, ver, mt, ct, pld_sz, is_p2p)
+    Pop()
+    Post(message, mt)
+}
+note left of ConsensusMsgSink :\
+Pushes to the queue and\n\
+if not consuming posts\n\
+Post(message).\n\
+Pops the queue and\n\
+if not empty posts\n\
+Post(message).
+
+abstract class ConsensusMsgConsumer {
+    {abstract} + message Parse(data, ver, mt, ct, pld_sz)
+    {abstract} + OnMessage(message, mt)
+}
+
+class DelegateBridge {
+}
+
+'ConsensusMsgConsumer <|-- DelegateBridge
+ConsensusMsgSink <|-- DelegateBridge
+
+ConsensusMsgSink "1" o-- "*" Message
+
+ConsensusMsgConsumer <|-- ConsensusMsgSink
+
+class BackupDelegate
+
+'BackupDelegate <|-- ConsensusMsgConsumer
+'BackupDelegate <|-- ConsensusMsgSink
+DelegateBridge <|-- BackupDelegate
+
+@enduml
+

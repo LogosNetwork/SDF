@@ -1,0 +1,18 @@
+@startuml
+
+activate PrimaryDelegate
+activate ConsensusManager
+activate ConsensusP2pBridge
+activate ConsensusNetIO
+
+[o-> PrimaryDelegate : Failed to reach\nconsensus quorum
+PrimaryDelegate -> ConsensusManager : enable p2p backup\nconsensus
+ConsensusManager -> ConsensusP2pBridge : Enable(true)
+ConsensusManager -> ConsensusP2pBridge : Re-propose PrePrepare via P2p\nBroadcast()
+ConsensusManager -> ConsensusNetIO : Re-propose PrePrepare via TCP/IP\nSend()
+...
+[o-> ConsensusManager : Transaction request\nfrom a client\nOnSendRequest()
+ConsensusManager -> ConsensusP2pBridge : Send consensus msg's via P2p\nBroadcast()
+ConsensusManager -> ConsensusNetIO : Send consensus msg's via TCP/IP\nSend()
+
+@enduml

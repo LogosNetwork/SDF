@@ -1,0 +1,142 @@
+@startuml
+
+Title Primary Delegate
+
+skinparam State {
+    ArrowColor<<Deferred>> #283747
+    BorderColor<<Deferred>> #283747
+    BackgroundColor<<Deferred>> Gray
+}
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+[*] --> REQUEST_VERIFY : Request
+
+RECALL_PENDING_WAIT --> POST_COMMIT_RECEIVED : received post-commit
+State PRIMARY_CONSENSUS {
+	'[*] --> WAITING_NEW_REQUEST
+	'WAITING_NEW_REQUEST --> REQUEST_VERIFY : Request
+
+	state CUMULATING{
+	    CUMULATING : if local node is the 1st primary, store the request in the primary waiting list
+	    CUMULATING : else, store it in the secondary waiting list, and start a timer\nWhen the timer expires, the request is moved to the primary waiting list if\nnot included in a post-commit
+'	    CUMULATING : set a PRIMARY_CONSENSUS timer if not set already
+'	    CUMULATING --> CUMULATING_TIMEOUT : timer expired
+	    
+'	    CUMULATING_TIMEOUT : move requests from the secondary waiting list to primary waiting list\ndepending on when they were stored
+	    CUMULATING --> PRE_PREPARE : primary waiting list not empty\nand the node is not in another\nPRIMARY_CONSENSUS session
+'	    CUMULATING --> PRE_PREPARE : have enough requests in the primary waiting list
+		CUMULATING --> [*] : primary waiting list is empty or\nanother PRIMARY_CONSENSUS session is running
+    }
+	
+    State POST_COMMIT{    
+	    POST_COMMIT: send post-commit to the clients and network 
+	    'POST_COMMIT: unreserve accounts
+	    POST_COMMIT: update local DB, account balance, last hash etc. 
+	    POST_COMMIT --> [*] : primary waiting list is empty
+	}
+	
+	POST_COMMIT --> PRE_PREPARE : primary waiting list not empty
+	
+	State RECALL_PENDING_WAIT{
+		RECALL_PENDING_WAIT : wait for the result of backup delegates running the fallback protocol 
+		RECALL_PENDING_WAIT : set a RECALL_PENDING timer
+		RECALL_PENDING_WAIT --> RECALL : timer expire
+		
+		RECALL : start the recall protocol		
+	}
+	
+    State POST_PREPARE{
+	    POST_PREPARE: Send post_prepare to all peers    
+	    POST_PREPARE --> POST_PREPARE_WAIT 
+	    
+	    POST_PREPARE_WAIT: set a POST_PREPARE timer 
+	    POST_PREPARE_WAIT : verify commits when received
+	    POST_PREPARE_WAIT --> POST_PREPARE_WAIT : Received a commit, but <= 2/3
+	    POST_PREPARE_WAIT --> RECALL_PENDING_WAIT : timer expired
+		POST_PREPARE_WAIT --> POST_COMMIT : > 2/3 valid Commit
+		
+		'POST_PREPARE_AGGREGATE : > 2/3
+	    'POST_PREPARE_AGGREGATE : Aggregate the signatures
+		'POST_PREPARE_AGGREGATE --> 
+	}
+    
+    State PRE_PREPARE{
+    	'PRE_PREPARE : for every request, mark account as reserved by the request
+	    PRE_PREPARE : create a batch, sign it and send pre-prepare to all peers   
+	    PRE_PREPARE -down-> PRE_PREPARE_WAIT
+	    
+		PRE_PREPARE_WAIT : set a PRE_PREPARE timer 
+		PRE_PREPARE_WAIT : verify prepares when received 
+	    PRE_PREPARE_WAIT --> PRE_PREPARE_WAIT : Received a prepare, but < 3/4 
+	    PRE_PREPARE_WAIT -right-> PRE_PREPARE_TIMEOUT : timer expired
+		PRE_PREPARE_WAIT --> ACCELERATED_COMMIT :  >= 3/4 valid prepares\nagree whole batch
+		
+		State ACCELERATED_COMMIT<<Deferred>>{
+            ACCELERATED_COMMIT : Aggregate the signatures
+            ACCELERATED_COMMIT --> POST_COMMIT
+        }
+        
+        note left of ACCELERATED_COMMIT
+            The ACCELERATED_COMMIT state
+            is currently deferred indefinitely.
+        end note
+			
+		
+		State PRE_PREPARE_TIMEOUT{
+			PRE_PREPARE_TIMEOUT : if <= 2/3 valid prepares agree on the whole batch, try to create a retry-batch as below:
+			PRE_PREPARE_TIMEOUT : -- create an empty retry-batch
+'			, then populate it with requests approved by > 2/3 delegates
+			PRE_PREPARE_TIMEOUT : -- for every request in the current batch, 
+			PRE_PREPARE_TIMEOUT : ---- if it is approved by > 2/3 delegates, add it to the retry batch
+			PRE_PREPARE_TIMEOUT : ---- else send reject message to the client with proper error code
+            PRE_PREPARE_TIMEOUT : ---- (multiple retry batches may be created if approvals are split amongst delegates)
+			PRE_PREPARE_TIMEOUT : -- if retry batch not empty, sign it and send pre-prepare to all peers
+			PRE_PREPARE_TIMEOUT : -- else send empty pre-prepare to all peers
+			PRE_PREPARE_TIMEOUT -up-> PRE_PREPARE : created retry batch\n(empty or not empty)
+			
+			PRE_PREPARE_TIMEOUT --> POST_PREPARE : > 2/3 valid prepares\nagree on whole batch
+		}
+    }
+	
+    State REQUEST_VERIFY{
+    	REQUEST_VERIFY : check clientId against local blacklist 
+    	REQUEST_VERIFY : check POW 
+	    REQUEST_VERIFY : find client's account in local DB
+	    REQUEST_VERIFY : try to reserve the account's next slot 
+	    REQUEST_VERIFY : (every account has one slot, which is created when opening the account or after a post-commit.\nOnce reserved by a request, the account cannot be reserved by other requests till the end of the next epoch) 
+	    REQUEST_VERIFY : verify X >= account balance
+	    REQUEST_VERIFY : check prev-hash to see if double spend or gap in account chain.      
+	    REQUEST_VERIFY : check other fields, eg. version
+	    REQUEST_VERIFY : check signature
+	    
+	    REQUEST_VERIFY --> REJECT : other errors in request
+	    REQUEST_VERIFY --> BLACK_LISTED : malicious errors in request
+	    REQUEST_VERIFY --> CUMULATING: valid request	     
+	    REQUEST_VERIFY --> GAP_IN_ACCOUNT_CHAIN : unknown prev-hash
+	    
+	    GAP_IN_ACCOUNT_CHAIN: Start Bootstrap Protocol
+    	GAP_IN_ACCOUNT_CHAIN --> REJECT : cannot fill the gap in time
+    	GAP_IN_ACCOUNT_CHAIN --> REQUEST_VERIFY : filled the gap
+    	 
+    	BLACK_LISTED: update local blacklist
+    	BLACK_LISTED --> REJECT
+    	
+    	REJECT : Reservation status is reset to the value before processing this request
+    	REJECT : Send Reject to clients, with proper error code
+    	REJECT --> [*]
+    	
+    }
+}
+@enduml
+
+			'for every request in the batch but disapproved by >1/3 delegates, \nunreserve the account, send Reject message to the client with proper error code
+			'PRE_PREPARE_TIMEOUT --> PRE_PREPARE : > 2/3 valid prepares\nagree on a proper subset
+			'PRE_PREPARE_TIMEOUT --> ABORTED : <= 2/3 valid prepares \nagree on any subset
+
+   'REJECT --> [*] 
+	'POST_COMMIT --> [*]
+	'CUMULATING_TIMEOUT --> [*] : primary waiting list is empty
+	'note "Performance optimization at PRE_PREPARE_WAIT and \nPOST_PREPARE_WAIT by delaying verification" as N2
+	'note "An account can be reserved by one on-going request" as N3	

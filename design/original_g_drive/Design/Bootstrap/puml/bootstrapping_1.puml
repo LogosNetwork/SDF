@@ -1,0 +1,19 @@
+@startuml
+
+split
+      :Create Bootstrap Thread;
+      
+      :boostrap_initiator::boostrap_initiator();
+
+      :boostrap_initiator::run_boostrap();
+
+      repeat
+        :Sleep Until Bootstrap Attempt is Available;
+        :Perform Bootstrap Attempt;
+        :bootstrap_attempt::request_pull();
+        :bulk_pull_client::request();
+      repeat while(Continue)
+
+      detach
+end split
+@enduml

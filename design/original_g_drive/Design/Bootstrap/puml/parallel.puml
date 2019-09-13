@@ -1,0 +1,10 @@
+@startuml
+
+node->peer1: bootstrap
+node->peer2: bootstrap
+node->peerN: bootstrap
+peer1->node: response
+peer2->node: response
+peerN->node: response
+
+@enduml

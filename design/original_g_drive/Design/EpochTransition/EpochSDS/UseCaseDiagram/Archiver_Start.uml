@@ -1,0 +1,17 @@
+@startuml
+
+actor localNode_Start
+
+rectangle Archiver {
+	(localNode_Start) -- (Start)
+	(Start) --> (EventProposer::Start)
+	(EventProposer::Start) --> (Schedule next MicroBlock)
+	(EventProposer::Start) --> (Schedule epoch transition)
+	
+	note as N1
+	  The EpochBlock is proposed after the last MicroBlock
+	end note
+	(Schedule next MicroBlock) .. N1
+}
+
+@enduml

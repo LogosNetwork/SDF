@@ -1,0 +1,36 @@
+@startuml
+entity remote
+entity daemon
+entity node
+entity "bootstrap\nlistener" as bootstrap
+entity "bootstrap\nserver" as boot_svr
+entity "request\nresponse\nvisitor" as req_visit
+entity "bulk\npull\nserver" as bulk_svr
+entity store
+entity block
+
+== Initialization ==
+daemon -> node : init
+daemon -> node : start
+node -> bootstrap : start
+bootstrap --> bootstrap : accept_connection
+
+== Bulk Pull ==
+remote -> bootstrap : bulk pull message
+bootstrap -> boot_svr : receive_header_action
+boot_svr -> boot_svr : receive_bulk_pull_action
+boot_svr -> boot_svr : add_request
+boot_svr -> boot_svr : next
+boot_svr -> boot_svr : run_next
+boot_svr -> req_visit : visit
+loop
+req_visit -> bulk_svr : send_next
+bulk_svr -> bulk_svr : get_next
+bulk_svr -> node : store
+node --> store : block_get
+bulk_svr -> remote : async_write
+bulk_svr -> bulk_svr : send_action
+bulk_svr -> bulk_svr : send_next
+end
+bulk_svr -> bulk_svr : send_finished
+@enduml

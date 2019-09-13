@@ -1,0 +1,30 @@
+@startuml
+
+actor localNode_Start
+
+rectangle Epoch_Transition {
+
+	rectangle ConsensusContainer{
+		(Construct)
+		(EpochTransitionEventsStart)
+	}
+	
+	rectangle EventProposer {
+		(EventProposer::Start)
+		note as N1
+			When the localNode becomes a retiring delegate and the epoch transition ends,
+			EventProposer stops scheduling next event.
+		end note
+		(Schedule next epoch transition event) .. N1 
+	}
+	
+	(localNode_Start) --> (Construct)
+	(localNode_Start) --> (EventProposer::Start) : through Archiver::Start
+	
+	(EventProposer::Start) --> (Schedule next epoch transition event)
+	(Schedule next epoch transition event) --> (EpochTransitionEventsStart)
+	(EpochTransitionEventsStart) --> (Schedule next epoch transition event) : loop
+}
+
+@enduml
+(Construct) --> (EventProposer::Start)

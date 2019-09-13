@@ -1,0 +1,21 @@
+@startuml
+
+activate Client
+activate TxAcceptor
+activate Delegate
+
+[o-> TxAcceptor : On start up fetch\ndelegate's IP configuration
+
+[o-> Delegate : On start up fetch\ntx-acceptor's IP configuration
+
+[o-> Delegate : RPC message with tx-acceptor IP configuration
+
+Delegate -> TxAcceptor : Connect
+
+Delegate -> TxAcceptor : Handshake, BLS signed IP/port address
+TxAcceptor -> TxAcceptor : Validate BLS signature
+Client -> TxAcceptor : Transaction
+TxAcceptor -> Delegate : Transaction
+
+@enduml
+

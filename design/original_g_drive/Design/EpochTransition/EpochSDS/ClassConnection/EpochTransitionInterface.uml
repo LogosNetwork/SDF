@@ -1,0 +1,46 @@
+
+@startuml
+
+package EpochTransition_Component{
+	class EventProposer #lightgreen
+	class ConsensusContainer #lightgreen
+	class EpochManager #lightgreen
+	ConsensusContainer -- EpochManager : create before new epochs
+	ConsensusContainer -- EventProposer : propose timer based\nepoch transition events
+	
+	package ConsensusManagers{
+	
+	}
+	
+	package ConsensusNetwork{
+		class ConsensusNetIOManager #lightgreen
+		class EpochPeerManager #lightgreen 
+	}
+	
+	ConsensusContainer --  EpochPeerManager : accept delegate connections
+	EpochManager -- ConsensusNetIOManager : initiate delegate connections
+	EpochManager -- ConsensusManagers : get everts:\n--new epoch# in post-commit\n--pre-prepare reject with NEW_EPOCH
+}
+
+
+package Database{
+	
+}
+
+package Recall{
+	
+}
+
+package Network{
+	
+}
+
+EpochTransition_Component -- Database : read from and write to DB
+EpochTransition_Component -- Recall : read recall information
+EpochTransition_Component -- Network : make connections and\npass messages
+
+@enduml
+
+class BatchBlockConsensusManager #lightgreen
+class logos::block_store
+interface IRecallHandler

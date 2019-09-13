@@ -1,0 +1,12 @@
+@startuml
+
+activate BackupDelegate
+activate ConsensusP2pBridge
+activate ConsensusNetIO
+
+[o-> BackupDelegate : Consensus message is\nreceived via P2p
+BackupDelegate -> ConsensusP2pBridge : Enable(true)
+BackupDelegate -> ConsensusP2pBridge : Send consensus msg's via P2p\nBroadcast()
+BackupDelegate -> ConsensusNetIO : Send consensus msg's via TCP/IP\nSend()
+
+@enduml

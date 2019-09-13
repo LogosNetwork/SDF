@@ -1,0 +1,64 @@
+@startuml
+
+center header <font size="24" color=black>Candidacy State for Delegates</font>
+state "Delegate Elect - Not a candidate" as DE {
+    state "Announced" as DEA {
+        state "Announced in Previous Epoch" as DEAprev
+        state "Announced this epoch" as DEAthis
+    }
+    state "Renounced" as DER {
+        state "Renounced in Previous Epoch" as DERprev
+        state "Renounced this epoch" as DERthis
+    }
+    DEAprev --> DERthis : RenounceCandidacy/StopRepresenting
+    DERprev --> DEAthis : AnnounceCandidacy
+}
+
+
+state "Epoch 1 - Not a candidate" as E1 {
+    state "Announced" as E1A {
+        state "Announced in Previous Epoch" as E1Aprev
+        state "Announced this epoch" as E1Athis
+    }
+    state "Renounced" as E1R {
+        state "Renounced in Previous Epoch" as E1Rprev
+        state "Renounced this epoch" as E1Rthis
+    }
+    E1Aprev --> E1Rthis : RenounceCandidacy/StopRepresenting
+    E1Rprev --> E1Athis : AnnounceCandidacy
+}
+
+state "Epoch 2 - Not a candidate" as E2 {
+
+    state "Announced" as E2A {
+        state "Announced in Previous Epoch" as E2Aprev
+        state "Announced this epoch" as E2Athis
+    }
+    state "Renounced" as E2R {
+        state "Renounced in Previous Epoch" as E2Rprev
+        state "Renounced this epoch" as E2Rthis
+    }
+    E2Aprev --> E2Rthis : RenounceCandidacy/StopRepresenting
+    E2Rprev --> E2Athis : AnnounceCandidacy
+
+}
+DEA --> E1Aprev
+DER --> E1Rprev
+
+E1A --> E2Aprev
+E1R --> E2Rprev
+
+state "Epoch 3" as E3 {
+    state "Candidate - Announced" as C
+    state "NonCandidate - Renounced" as N
+}
+E3 : from here, delegates follow same candidacy state transitions as nondelegates
+E3 : see nondelegate diagram
+E3 : note, delegates will still serve as delegates in epoch 4 regardless
+
+
+
+
+E2A --> C
+E2R --> N
+@enduml

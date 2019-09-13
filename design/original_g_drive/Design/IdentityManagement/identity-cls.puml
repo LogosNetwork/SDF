@@ -1,0 +1,110 @@
+@startuml
+
+class DelegateIdentity {
+    BlsPubKey sign_key
+    ECIESPubKey encr_key
+}
+
+enum P2pAppType {
+    Consensus
+    AddressAd
+    AddressAdTxAcceptor
+}
+
+class P2pHeader {
+    uint8_t version
+    P2pAppType app_type
+}
+
+note top of P2pHeader : Depending on app_type\nP2pHeader is followed\n\
+by either P2pConsensusHeader\n\
+or AddressAd\n\
+or AddressAdTxAcceptor
+
+P2pHeader -- P2pAppType
+
+class P2pConsensusHeader {
+    uint32_t epoch_number
+    uint8_t src_delegate_id
+    uint8_t dest_delegate_id
+}
+
+class AddressAd {
+    uint8_t delegate_id
+    uint32_t epoch_number
+    uint8_t encr_delegate_id
+    uint128_t ip
+    uint16_t port
+    Signature signature
+    Hash()
+    Serialize(ECIESPubKey &encr_key)
+    Deserialize(bool &error, ECIESPrivKey &decr_key)
+}
+
+note top of AddressAd : ip/port are encrypted in the\n\
+serialized message\n\
+with encr_delegate_id delegate id\n\
+ECIES public key
+
+class AddressAdTxAcceptor {
+    uint16_t json_port
+    Hash()
+    Serialize()
+    Deserialize(bool &error)
+}
+
+AddressAd <|- AddressAdTxAcceptor
+
+P2pHeader "1" o-- "1" P2pConsensusHeader
+
+P2pConsensusHeader "1" o-- "1" ConsensusMessage
+P2pHeader "1" o-- "1" AddressAd
+
+DelegateIdentityManager -- DelegateIdentity
+
+class DelegateIdentityManager {
+    p2p_interface & _p2p
+    uint128_t ip
+    uint16_t port
+    vector<tuple<uint128_t,uint16_t,uint16_t>> tx_acceptors
+    vector<AddressAd> addresses
+    vector<AddressAdTxAcceptor> tx_acceptor_addresses
+    BlsPrivKey sign_key
+    ECIESPrivKey encr_key
+    DelegateIdentity [] delegates_key
+    IdentifyDelegates(uint32_t epoch_number, uint8_t & delegate_id, DelegateIdentity[] &)
+    OnAddressAd(uint8_t delegate_id, void *message, size_t size)
+    OnAddressAdTxAcceptor(uint8_t delegate_id, void *message, size_t size)
+    OnTxAcceptorAdded(string ip, uint16_t port, uint16_t json_port)
+    OnTxAcceptorDeleted(string ip, uint16_t port, uint16_t json_port)
+    Sign(AddressAd &message)
+    Sign(AddressAdTxAcceptor &message)
+    Validate(AddressAd &message)
+    Validate(AddressAdTxAcceptor &message)
+    Advertise(const void *message, size_t size)
+    AdvertiseTxAcceptor(const void *message, size_t size)
+    ScheduleAdvert(Minutes)
+    SchedulePeerAddrRequest(Minutes)
+    Advert()
+    PeerAddrRequest()
+    UpdateDelegateAddressDB()
+    UpdateTxAcceptorAddressDB()
+    DeleteDelegateAddressDB(epoch_number)
+    DeleteTxAcceptorAddressDB(epoch_number)
+    OnEpochTransitionEnd()
+    OnPeerAddrRequest()
+}
+
+note top of DelegateIdentityManager : ip,port,tx_acceptors -\n\
+this delegate's address;\n\
+addresses,tx_acceptor_addresses -\n\
+other delegates' address
+
+DelegateIdentityManager "1" o-- "31" AddressAd
+DelegateIdentityManager "1" o-- "*" AddressAdTxAcceptor
+
+class node
+
+node "1" o-- "1" DelegateIdentityManager
+
+@enduml

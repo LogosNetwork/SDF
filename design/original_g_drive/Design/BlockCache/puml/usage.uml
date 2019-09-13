@@ -1,0 +1,16 @@
+@startuml
+
+actor Block_Received_Via_P2P
+
+rectangle Database {
+	(Write to database)
+}
+
+rectangle Cache {
+	(Block_Received_Via_P2P) --> (Validate aggregated signatures) 
+	(Validate aggregated signatures) --> (Insert into PendingBlockContainer\n and Validate block)
+	(Insert into PendingBlockContainer\n and Validate block) --> (Append to write queue)
+	(Append to write queue) --> (Write to database)
+}
+
+@enduml

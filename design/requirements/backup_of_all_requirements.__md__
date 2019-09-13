@@ -1,0 +1,3794 @@
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+   <td>
+<h1>Notes</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>Precondition, when the core software is initialized to be a standalone TX acceptor, the core software shall provide TCP/IP server access point for a valid delegate to connect.
+   </td>
+   <td>via configuration file
+   </td>
+  </tr>
+  <tr>
+   <td>Precondition, when the core software is initialized to be a standalone TX acceptor, the core software shall provide a handshake to establish the validity of the connected delegate.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Precondition, when the core software is initialized to be a TX acceptor and P2P subsystem then both of these subsystems have independent communication channel.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>A Delegate can connect to multiple TX Acceptors.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a public interface to receive from a client via TCP/IP transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The transaction request shall be an array of single state blocks in json format or binary format. The latter is described per IDD format.
+   </td>
+   <td>The argument in favour of json is that either binary or json have to be deserialized. Since the performance is affected either way, from client's perspective json is more user friendly.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall validate that the transaction is not created by the burned account.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall perform validity check on transaction fee amount (lower than the minimum transaction fee defined in the epoch block).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core Software shall perform validity check on the signature before processing the transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall send a rejection message with the proper error code if a transaction request cannot be validated.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall forward validated transaction(s) to the connected delegate.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall send a heartbeat message to the connected Delegate after inactivity (no transactions received) of 40 seconds.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>A Delegate shall reconnect to TX Acceptor after inactivity of 60 seconds.
+   </td>
+   <td>
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+   <td>
+<h1>Notes</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Definitions</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Token Account: The genesis account for a specific token issued by an issuer. It contains important settings of that specific account
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Token Account Settings</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Overview: The token account capability is an extension to the conventional Logos Network's account architecture which allows for token issuance on the Logos Network. The token account contains various important token accounting settings that dictate the allowable operations on the tokens. Some settings are immutable while others can be configured post account opening. For example, if the total supply is set as immutable, then the token issuer cannot issue additional tokens post the initial issuance. The section below describes the detailed requirements for token account settings. Note that all commands are executed only when delegate consensus are reached.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command for token issuance on the Logos Network per the message format described in the Logos IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall charge a transaction fee for all successful execution of token related commands to the token account.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any request to change any of the mutability setting of any token account from FALSE to TRUE.
+   </td>
+   <td>If the mutability flag is toggled to FALSE, then the associated setting and the flag itself can not be changed. However, we can always turn mutability from TRUE to FALSE to lock in a setting.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject additional issuance of the token if the mutability setting of the total supply is set to immutable (FALSE).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any request to change the revocability setting if the mutability setting of revocability is set to immutable (FALSE)
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any request to change the freezability setting if the mutability setting of freezability is set to immutable (FALSE)
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any request to change the transaction fee setting if the mutability setting of transaction fee setting is set to immutable (FALSE)
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any request to change the whitelist setting if the mutability setting of whitelist is set to immutable
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Token Account Operations and Executions</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Overview: Token accounts support many operations to facilitate with activities associated with issued tokens. There is a mutability flag for some of the settings to dictate whether certain operations can be performed on the account. For example, if the revocability mutability setting is set to false, then the token issuer cannot revoke an account’s balance. The section below provides details regarding supported operations and their dependencies.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to update token issuer's information per the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a mutability setting for revocability.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a mutability setting for freezability.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a mutability setting for transaction fee.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a mutability setting for issuing additional tokens.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a mutability setting for whitelist.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to change the token account's mutability settings from TRUE to FALSE per the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to issue additional tokens of the same type per the IDD if the additional token issuance setting is set to TRUE
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to add/delete token account's controller list.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to configure a token account's controllers privilege per the IDD.
+   </td>
+   <td>Each controller can be set to have different levels of privilege similar to a Linux file system - revocability. freezability, whitelist capability, burn capability, transaction fee setting and the ability to withdraw tokens/transaction fees. Mutability setting still overrides these privilege settings in the sense that if a mutability setting for revocability is set to FALSE, then even if revocability for a specific controller is set to TRUE, no funds can be revoked.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to add an account to its whitelist per the IDD if the whitelist setting is enabled.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject the request to add an account to its whitelist if the account itself has not requested to be whitelisted.
+   </td>
+   <td>For an account to be whitelisted, the whitelist setting must be set to TRUE in the token account first, then a non-token holding account can request whitelisting. After the request is executed, the token account can then whitelist the account by sending a request to the network. Only after both requests are executed, the account will have the token shown as whitelisted in its own account and it is then ready to receive funds.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to remove an account from the whitelist.
+   </td>
+   <td>The protocol still allows for sending of tokens if the account is off the whitelist - but it can no longer receive.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to revoke tokens from an account per the IDD if the revocability setting is set to TRUE.
+   </td>
+   <td>The command has a destination address in which the revoked balance is sent to.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to toggle the revocability setting.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to add an account to the freeze list per the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall toggle the freeze flag of an account to TRUE if a valid request to freeze the account is executed and the account already holds the corresponding token or the account has been whitelisted.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall add the account to its freeze list within the token account if a valid request to freeze the account is executed and the account exists but does not hold the corresponding token.
+   </td>
+   <td>This requirement is more design oriented - but it is called out here so that we save storage space. We only add the accounts to a list if its not open or does not hold the specific type token to be frozen.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject freeze list command if the target account does not exist.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to toggle the freezability setting.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to toggle the whitelist setting.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accept a request to send tokens if the freezability setting in the token account is set to FALSE even if the account is frozen.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall delete the freeze list from the token account if the freezability setting is set to false and the corresponding mutability setting is also set to FALSE.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to send tokens from the token account account balance per the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to send Logos native currency from the token account account balance per the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to configure the token transaction fee of the token account per the IDD.
+   </td>
+   <td>percentage/flat fee.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall only accept operation requests from the corresponding token account's controllers accounts with sufficient privileges.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to burn tokens from the token account by reducing its current balance by the requested amount.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject all requests to send tokens if the target or source account is frozen.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to send tokens from the token account transaction fee balance per the IDD
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall collect token transaction fee and deposit it into the token account if the token transaction fee setting is enabled.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Expanded Account capability</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Overview: In order to fully support token operations, Logos basic accounts capabilities are expanded to include additional attributes. These attributes help transact tokens on top of Logos Network. The section below describes the details extension to the Logos accounts.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall add the token name and its associated balance to the account when a new token is received.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to send tokens from the token holder's account per the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command to request for whitelisting from the token holder's account per the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any send tokens command if the targeted account is not whitelisted and the whitelist setting is set to TRUE in the token account.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a status field for each of the token the account owns or after submitting a whitelist request that shows the whitelist status as well as whether the funds are frozen.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject a whitelist request command if the token does not require whitelisting.
+   </td>
+   <td>
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+   <td>
+<h1>Notes</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Overview</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Requirements for staking. The staking subsystem defines how accounts can lock up a portion of their funds, making those funds unspendable, in exchange for a portion of inflation rewards, as well as an increase in elections voting power (if the account is a representative) and an increase in consensus weight (if the account is a delegate). Representatives and delegates each have minimum staking requirements.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Staking comes in 3 forms. Accounts may stake to themselves; this form of staking will mainly be used by delegates and representatives. Delegates and representatives each must have a minimum amount of self stake to be a delegate or representative. Self staking also increases a representatives voting power and a delegates weight within consensus. The second form of staking is locked proxy; this form of staking will mainly be used by non-representative/non-delegate accounts, who will stake funds to a representative, via the proxy command. These funds are locked (unspendable) and increase the reps voting power by the amount staked. The third form of staking is unlocked proxy; in this form of staking, the available account balance of non-representative/non-delegate accounts (available account balance does not include locked proxy funds or staked funds) are counted towards the representatives voting power, multiplied by a dilution factor. The dilution factor is less than 1, so unlocked proxied funds count less towards a rep's voting weight than the same amount of staked/locked proxied funds. These funds are not actually staked: accounts are free to spend these unlocked proxied funds, and the activity will affect the representative's voting weight. See the definitions for more detail.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Staking is handled by 3 different requests: Stake, Unstake and Proxy. Stake and Unstake are used by delegates and representatives to adjust their self stake. Proxy allows a non-representative account to choose a representative, and simultaneously allows an account to increase or decrease the amount of locked proxied stake.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>One thing to note: reps and delegates must always stake to themselves (cannot proxy) and the delegate stake, used within consensus to approve or reject request blocks, does not include proxied stake. See the definitions for more details
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Definitions</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>staked: (state) funds that are staked are unspendable and are used to calculate elections voting power and delegate_stake. Funds are staked <strong><em>to</em></strong> an account.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>thawing: (state) funds that are thawing are unspendable but are not used to calculate elections voting power and delegate_stake
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>available: (state) funds that are available are free to be spent by the holding account
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>frozen: (state) funds that are frozen are unspendable but are not thawing and are not used to calculate elections voting power and delegate_stake. When a delegate submits an Unstake request, the funds are frozen until the delegate has finished their current term, after which those funds begin thawing
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>thawing_period: length of time that funds are in the thawing state. Parameter of the system that defaults to 3 weeks.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>target_account: property of staked, thawing or frozen funds. the target_account of staked funds is the account whose election voting power has increased due to the staked funds. the target_account of frozen or thawing funds is the account those funds were staked to immediately prior to entering the thawing or frozen state.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>source_account: property of staked, thawing or frozen funds. the source_account of staked, thawing or frozen funds is the account that issued the request to move those funds to the staked, thawing or frozen state, and the account that will be able to spend those funds 1 thawing period after those funds move to the thawing state
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>origin: the account that signed a request. Typically the sending account
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Stake: (request) move funds to a staked state from a thawing, frozen or available state. target_account is the origin of the request. Contains a field specifying amount to stake
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Unstake: (request) move staked funds, with a target_account equal to origin, to a thawing state, with a possible intermediate state of frozen. Contains a field specifying the amount to unstake
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Proxy: (request) select an account to be a representative for the origin account. Optionally specify an amount of funds to lock proxy to the newly selected representative, where the newly selected representative will be the target_account of the staked funds.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>liable: (property of staked, thawing or frozen funds) funds that are liable are liable for a specific account, A, (or multiple accounts) because those funds are or were previously staked to A. If I locked proxy to A, the locked proxy funds are liable for A. If I locked proxy to A, then reproxy those same funds to B, those funds are liable for A and B. If I locked proxy to A, then adjust my locked proxied amount to 0, those thawing funds are liable for A.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>liability_period: length of time that funds are liable for a specific account after funds are no longer staked to that account. Equal to the thawing_period
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>self_stake_amount: per each account. the amount of staked funds for which this account is the target_account and the source_account
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>locked proxy: a type of staked funds where the target_account is different than the source_account. Also, to stake funds such that those funds will be locked proxied funds
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>representative: an account, A, chosen by another account, B, where A is voting during elections on B's behalf.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>locked_proxy_amount: per each representative. the amount of staked funds for which this account is the target_account but not the source_account
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>unlocked_proxy_amount: per each representative R. the sum of all account balances (available funds) for each account that has chosen R as a representative via Proxy request
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>dilution_factor: 0.25. When accounts choose a representative, that representative's voting power is increased by (accounts available balance * dilution_factor)
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>total_stake_amount: self_stake_amount + locked_proxy_amount + unlocked_proxy_amount * dilution_factor
+   </td>
+   <td>Note rep_stake_amount is already multiplied by dilution_factor
+   </td>
+  </tr>
+  <tr>
+   <td>minimum_rep_stake: the minimum self_stake_amount a representative must have to be eligible to vote
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>minimum_delegate_stake: the minimum self_stake_amount a delegate must have to be eligible for candidacy
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>delegate_stake_raw: the self_stake_amount of a candidate during the epoch that they were elected.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>delegate_stake: an amount used within consensus to approve or reject request blocks. A request block must be approved by a minimum amount of total stake, where each delegate that approves the request block adds their own delegate_stake to the total stake. Delegate_stake is delegate_stake_raw after redistribution
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>candidacy_action_tip: the latest post-committed request of an account that is a candidacy request (AnnounceCandidacy, RenounceCandidacy or StopRepresenting). See elections requirements and design
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>representative_action_tip: the latest post-committed request of an account that is a representative request (StartRepresenting, AnnounceCandidacy or StopRepresenting). See elections requirements and design
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>stake_subfield: field of StartRepresenting or AnnounceCandidacy, which specifies how much to stake as a representative or delegate. Is optional
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>unstake_subfield: field of RenounceCandidacy or StopRepresenting, which specifies how much to unstake upon post-commit. Is optional
+   </td>
+   <td>stake_subfield and unstake_subfield are both optional as an account may already have enough staked to become a candidate or representative, and an account may also not wish to unstake anything when RenouncingCandidacy
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Requests</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a request (Proxy) for an account to select a representative
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a request (Stake) for an account to stake funds to themselves or increase the amount of funds staked to themselves
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a request (Unstake) for an account to move a specified amount of funds staked to themselves to the thawing state (or frozen state)
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a request (Proxy) for an account to lock proxy to a representative or adjust the amount of funds locked proxied to a representative
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accept Stake requests that conform to the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accept Unstake requests that conform to the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accept Proxy requests that conform to the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall ensure rep_stake_amount, locked_proxy_amount and unlocked_proxy_amount reflect all and only requests that were post-committed prior to the current epoch.
+   </td>
+   <td>Stake, Unstake and Proxy don't take effect until the next epoch. Requests that affect unlocked_proxy_amount don't alter unlocked_proxy_amount until start of next epoch.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Thawing</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall move funds from the thawing state to the available state 1 thawing period after the end of the epoch during which the request (Proxy or Unstake) that moved those funds to the thawing state was post-committed
+   </td>
+   <td>Thawing period starts when the epoch ends.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall allow for x different funds to be thawing concurrently per account, where x is a system parameter.
+   </td>
+   <td>X can be set to 32 in initial implementation.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Liability</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing a Stake request, make the staked funds liable for the origin of the request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing an Unstake request, make the thawing of frozen funds liable for the origin of the request for 1 liability period after the end of the epoch during which the Unstake request was post-committed
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing a Proxy request that specifies an amount of funds to lock proxy, make the locked proxied funds liable for the representative specified in the request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon moving locked proxied funds to thawing state (via Proxy or Stake request), make those funds liable for the target_account of the funds for 1 liability period after the end of the epoch during which the Proxy or Stake request was post-committed
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon changing the target_account of locked proxied funds (via Proxy or Stake request), make those funds liable to the original target_account for 1 liability period after the end of the epoch during which the Proxy or Stake request was post-committed
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall allow funds to be liable for at most 2 accounts simultaneously.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall allow for x liabilities to exist concurrently per account, where x is a system parameter.
+   </td>
+   <td>X can default to 32
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Selection of Funds to Stake</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing a Stake request or a Proxy request, first draw the specified amount of funds to stake, or lock proxy, from any locked proxied funds that are liable for 1 account, then from any thawing funds liable for 1 account which is not the origin of the request (ordered by furthest from finishing thawing) then from available funds. Any remaining staked funds (including locked proxied funds) are moved to the thawing state.
+   </td>
+   <td>Note, Stake and Proxy do not draw from any funds staked to self, or any thawing funds previously staked to self. Note, this requirement ensures that an account only ever has one active proxy, and that staking to self eliminates any proxies.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Proxy</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing a Proxy request that does not specify an amount of funds to lock proxy, move any previously locked proxied funds to the thawing state.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing a Proxy request that does specify an amount of funds to lock proxy, locked proxy the specified amount of funds to the new representative, selecting the funds as described in "Selection of Funds to Stake" section.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject Proxy requests where the representative_action_tip of the origin is StartRepresenting or AnnounceCandidacy
+   </td>
+   <td>Can't select a representative if you are a representative
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Representatives and Delegates</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall weight election votes by a representative's total_stake_amount
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject Unstake requests that would update the self_stake_amount to less than the minimum_delegate_stake from an account whose candidacy_action_tip is AnnounceCandidacy
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject Unstake requests that would update the self_stake_amount to less than the minimum_rep_stake from accounts whose representative_action_tip is StartRepresenting or AnnounceCandidacy
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall calculate delegate_stake based on delegate_stake_raw according to the formula described in the design document.
+   </td>
+   <td>delegate_stake will be capped to eliminate any one delegate controlling a majority of stake within consensus, creating a single point of failure. Also, delegate_stake is only dependent on delegate_stake_raw, which is the self_stake_amount at election time
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject StartRepresenting requests where the origin's self_stake_amount is less than the minimum_rep_stake and the stake subfield is empty
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject StartRepresenting requests where the stake_subfield is not empty and origin's self_stake_amount would be less than the minimum_rep_stake after staking to self the amount specified in stake_subfield
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject AnnounceCandidacy requests where the origin's self_stake_amount is less than the minimum_delegate_stake and the stake subfield is empty
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject AnnounceCandidacy requests where the stake_subfield is not empty and origin's self_stake_amount would be less than the minimum_delegate_stake after staking to self the amount specified in stake_subfield
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing AnnounceCandidacy or StartRepresenting, if the stake_subfield is not empty, move the specified amount of funds to the staked state with a target_account equal to origin
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject RenounceCandidacy requests where the unstake_subfield is not empty and the origin's self_stake_amount would be less than the minimum_rep_stake after unstaking the amount specified in the unstake_subfield
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing StopRepresenting or RenounceCandidacy, unstake the amount of funds specified in the unstake_subfield, if unstake_subfield is not empty
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall, upon post-committing StartRepresenting or AnnounceCandidacy, change the representative of the origin account to null
+   </td>
+   <td>Can't have a representative if you are a representative
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall ensure, if a delegate or delegate-elect submits an Unstake request, or a StopRepresenting/RenounceCandidacy request with an unstake_subfield, the staked funds will move to the frozen state in the next epoch, and then to the thawing state at the end of the delegate's current term
+   </td>
+   <td>Thawing period doesn't begin until delegates finish their term
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall ensure, if a candidate submits an unstake command, or StopRepresenting/RenounceCandidacy request with an unstake subfield, and the candidate is elected, the staked funds will move to the frozen state in the next epoch, and then to the thawing state at the end of the candidates delegate term
+   </td>
+   <td>
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+   <td>
+<h1>Notes</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Overview</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>P2p backup consensus is used by the primary delegate when direct consensus to the backup delegates times out. In this case the request is propagated to the backup delegates via P2p subsystem. The backup delegate responds to the request via both P2p subsystem and direct communication channel. The primary delegate keeps on using both communication channels for configured period of time to send consensus messages. P2p backup consensus protocol is compliant and follows all specified consensus requirements.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Primary delegate</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall re-propose the batch state block via both P2p subsystem and direct connection if the recall timer set during direct connection consensus attempt is timed out.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall set 60 seconds P2p timer.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Once P2p consensus protocol is activated, as the primary delegate the core software shall continue using both P2p subsystem and direct connection for consensus messages.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate the core software shall count messages received via P2p subsystem and direct connection.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate the core software shall discontinue using P2p subsystem after P2p timer times out if the number of weighted direct connections to the delegates reaches the quorum.
+   </td>
+   <td>What is the ratio?
+   </td>
+  </tr>
+  <tr>
+   <td>If the number of weighted direct connections doesn't reach the quorum then the core software shall set the 60 seconds P2p timer and continue using P2p subsystem and direct connection for consensus messages.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Backup delegate</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Once a backup delegate receives a consensus message from the primary delegate, as the backup delegate the core software shall start using both P2p subsystem and direct connection for consensus messages.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate the core software shall set 60 seconds P2p timer.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate the core software shall count messages received via P2p subsystem.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate the cores software shall discontinue using P2p subsystem after P2p timer times out if there is no consensus message received via P2p subsystem.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>If the the number of received P2p messages is 0 then the core software shall discontinue using P2p subsystem.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>If the the number of received P2p messages is not 0 then the core software shall set the 60 seconds P2p timer and continue using P2p subsystem and direct connection for consensus messages.
+   </td>
+   <td>
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+   <td>
+   </td>
+   <td>
+<h1>Notes</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Overview</strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The Identity Management (IM) subsystem provides the overall identification capability for a node. It guides the Logos node software to
+<p>
+1. ascertain its role within the Logos Ecosystem,
+<p>
+2. keep track of key communication endpoints, namely delegates’ consensus and transaction-acceptor (TxA) addresses and ports, and
+<p>
+3. as a consensus participant, communicate its local endpoint(s) to the Logos network, as well as establish connections with peer delegates and their TxA's.
+<p>
+The main additional component introduced by IM is the concept of a “sleeve” (see definition below) within the core software. A sleeve can be in various states (defined below), which affects the types of role(s) the software can assume.
+<p>
+Additionally, action settings (defined below) impact the actual behavior the node exhibits in the network, including if/when it participates in consensus, if/when it connects to standalone TxA’s, as well as if/when it advertises its communication endpoints. The software provides an interface for user to modify and view the node identity states and action settings.
+   </td>
+   <td>
+   </td>
+   <td>communication endpoints refer to both consensus and TxA endpoints
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>State Definitions</strong>
+<p>
+<strong><em>locked, unlocked, sleeved</em> are three mutually exclusive states; the software must be at one of the three, and can transition from one to another</strong>
+<p>
+<strong>See diagram to the right for transitions. I, L, U, and S stand for init (initial state), locked, unlocked, and sleeved, respectively</strong>
+   </td>
+   <td>
+   </td>
+   <td>see usage in context in Requirements below
+   </td>
+  </tr>
+  <tr>
+   <td><strong>sleeve</strong>
+<p>
+a container within the software that stores and manages the node's governance identity ("governance ID")
+   </td>
+   <td>
+   </td>
+   <td>in other words, if the node is a regular p2p node, the sleeve would be empty
+<p>
+See below for governance identity definition
+   </td>
+  </tr>
+  <tr>
+   <td><strong><em>locked</em></strong>
+<p>
+state of the software where the sleeve (hence the node's governance ID) cannot be modified or assume the role of a delegate, and the software cannot perform actions associated with such role
+   </td>
+   <td>
+   </td>
+   <td><em>locked</em> is equivalent to the software being a "p2p" / regular "full" node. Its identity to the rest of the network is essentially NULL. Note that the sleeve database may contain encrypted keys while <em>locked</em>, but the keys are nevertheless inaccessible.
+   </td>
+  </tr>
+  <tr>
+   <td><strong><em>unlocked</em></strong>
+<p>
+state where the sleeve can be modified, but contains no content (hence no notion of governance ID), and the software cannot perform delegate actions
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong><em>sleeved</em></strong>
+<p>
+state where the sleeve can be modified, is managing one particular governance ID, and the software can perform delegate actions
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Action Setting Definitions</strong>
+<p>
+<strong>(settings are not mutually exclusive)</strong>
+   </td>
+   <td>
+   </td>
+   <td>see usage in context in HLR below
+   </td>
+  </tr>
+  <tr>
+   <td><strong><em>activated</em></strong>
+<p>
+setting mode that allows the software to perform delegate actions while in <em>sleeved</em> state if set to "<em>true</em>", and prevents the software to perform such actions if "<em>false</em>"
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong><em>auto broadcast enabled</em></strong>
+<p>
+setting mode that, if "<em>true</em>", instructs the software to automatically broadcast its consensus endpoint(s) and transaction acceptor endpoint(s) if in <em>sleeved</em> state as prescribed in the requirements below, and disables automatic broadcast if "<em>false</em>"
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Other definitions</strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Governance Identity</strong>
+<p>
+<strong>A governance identity is uniquely associated with the BLS key used for delegate election.</strong>
+<p>
+<strong>Specifically, given an BLS private key, the software can calculate its public key, query the epoch database, and ascertain its corresponding governance identity. If the BLS key is not matched with a recent database entry, then the node is a regular p2p one</strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>incumbent</strong>
+<p>
+The BLS public key's associated ID is a current delegate, i.e., the BLS key belongs to the elected delegate set recorded in epoch block with epoch number from i-2 to i-5 (if currently in epoch i)
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Requirements</strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>General Settings</strong>
+<p>
+<strong><em>describes how node ID action and TxA settings are configured and stored</em></strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall enable or disable modifying and viewing node identity states and action settings based on user configuration, in the form of a new "enable identity control" flag
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall attempt to load in node identity action settings ('activated') from user-provided configuration on startup
+   </td>
+   <td>
+   </td>
+   <td>setting/command parameter names are in single quotes
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to modify node identity action settings, with an option to specify a later epoch in which the new setting will begin taking effect
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall immediately apply the new setting when it receives an action setting modification command without a specified epoch
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall apply the new setting at epoch transition start of the provided epoch when it receives an action setting modification command with a specified epoch. For a specified epoch i, the new setting shall be applied at EPOCH_TRANSITION_START before the EPOCH_PROPOSAL_TIME for `i`
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall attempt to load in peer connectivity settings ('initial peers' and 'disable new connections') from user-provided configuration on startup
+   </td>
+   <td>
+   </td>
+   <td>This is more closely related to p2p component, but helpful to include here since it impacts governance node setup
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall attempt to load in transaction acceptor (TxA) settings from user-provided configuration on startup
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall have two p2p commands to query from its peers other delegates' consensus endpoints and TxA endpoints
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Sleeve Access Management</strong>
+<p>
+<strong><em>describes how the sleeve is managed and accessed. note this section doesn't cover the sleeve's internal content</em></strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall be in <em>locked</em> state on startup if an existing sleeve database is detected; otherwise, it initializes a new sleeve DB with an empty password and starts in <em>unlocked</em> state
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to initialize the sleeve with a password ("<strong>update password</strong>"), with an option to 'overwrite' an existing sleeve. The software shall enter <em>unlocked</em> state after initialization
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to reset an existing sleeve ("<strong>reset sleeve</strong>")
+   </td>
+   <td>
+   </td>
+   <td>in case the user has no access to the old sleeve and wishes to re-initialize
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to unlock the sleeve with a password ("<strong>unlock</strong>" command)
+   </td>
+   <td>
+   </td>
+   <td>designated command names are in double quotes
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall transition to <em>unlocked</em> upon receiving valid "unlock" while <em>locked</em>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to lock the sleeve ("<strong>lock</strong>" command)
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall transition to <em>locked </em>when it receives "lock" while <em>unlocked</em> or <em>sleeved</em>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Sleeve Identity Management</strong>
+<p>
+<strong><em>describes how the sleeve content is managed</em></strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to store keys ("<strong>store keys</strong>" command) with BLS and ECIES private keys, with an 'overwrite' option
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall reject "store keys" while <em>locked</em>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall persist private keys in encrypted format locally and transition to <em>sleeved</em> when it is <em>unlocked</em> and receives "store keys"
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall persist private keys in encrypted format locally (clearing previously existing keys) when it is <em>sleeved</em> and receives "store keys" with 'overwrite' set to true
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall reject "store keys" without 'overwrite' set to true while <em>sleeved</em>
+   </td>
+   <td>
+   </td>
+   <td>not handling the case where sleeved ID is incumbent. Specifically, there's no stopping an incumbent delegate from getting swapped out during the term, however it will only be to the delegate's detriment
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall further transition to <em>sleeved</em> immediately after transitionining to <em>unlocked</em> if locally persisted governance keys are detected
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to clear the sleeve content ("<strong>unsleeve</strong>" command)
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall erase locally persisted governance keys and transition to <em>unlocked</em> when it receives "unsleeve" while <em>sleeved</em>
+   </td>
+   <td>
+   </td>
+   <td>not handling the case where sleeved ID is incumbent. similar reasoning to note above
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Delegate Connectivity Management</strong>
+<p>
+<strong><em>describes how the software as a delegate 1) manages TxA and consensus connections, and 2) broadcasts its own endpoints</em></strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to connect to TxA's ("<strong>txa connect</strong>") with a list of endpoint(s)
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall reject "txa connect" if not <em>sleeved</em>
+   </td>
+   <td>
+   </td>
+   <td>Because not <em>sleeved</em> means the software has no BLS key to sign handshake messages with
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall attempt to connect to the provided TxA endpoint(s) when it receives "txa connect" while <em>sleeved</em>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall write the new endpoint(s) to configuration file (if not already present) after successfully connecting to TxA('s)
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall provide a command to delete TxA's ("<strong>txa delete</strong>") with a list of endpoint(s)
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall reject "txa delete" if not <em>sleeved</em>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall disconnect from provided endpoints immediately when it 1) receives "txa delete" 2) while <em>sleeved</em>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall advertise endpoint deletion after disconnecting from TxA(s) through "txa delete"
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall sever any existing TxA connections after after transitioning from <em>sleeved</em> to either <em>unlocked</em> or <em>locked</em>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall perform delegate actions after transitioning to <em>sleeved</em> if 1) the governance ID is of an incumbent delegate and 2) 'activated' is currently set to "true"
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the delegate in the next epoch, one hour before the epoch transition, the core software shall broadcast consensus endpoint advertisement messages every 30 minutes via p2p
+<p>
+Each consensus endpoint advertisement message shall include the delegat's consensus endpoint (ip + port) and current time stamp, and shall be encrypted with another delegate’s public ECIES key and shall be signed with the sender delegate's private BLS key
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the delegate in the next epoch, one hour before the epoch transition, the core software shall broadcast TxA endpoint advertisement messages every 30 minutes via p2p
+<p>
+Each TxA endpoint advertisement message shall include the IPs and ports of the delegate's tx-acceptors.
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the delegate in the current/next epoch, the core software shall broadcast received TxA and consensus endpoints via p2p
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall attempt to connect to TxA's stored in current settings after transitioning to <em>sleeved</em>
+<p>
+The core software shall send to tx-acceptor a handshake message consisting of the current time-stamp
+<p>
+The message shall be signed with the delegate’s private bls key.
+   </td>
+   <td>
+   </td>
+   <td>the software does not need to be a delegate in order to connect to TxA. It does, however, in order to broadcast TxA endpoints
+   </td>
+  </tr>
+  <tr>
+   <td>As the delegate in the next epoch, the core software shall request every 10 minutes from its peers list other delegates' consensus endpoints that the delegate doesn't have
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the delegate in the current/next epoch, the core software shall send a handshake message upon connecting to another delegate
+<p>
+The message shall contain software version, current epoch, delegate’s id, type of the delegate’s set (current (old delegate set) or transitioning (new delegate set)), and its consensus endpoint
+<p>
+The message is signed with the delegate’s private bls key
+   </td>
+   <td>
+   </td>
+   <td>the handshake can take place for a delegate in current epoch if it comes online late / reconnects after crashing;
+<p>
+it takes place for a delegate in next epoch during the EPOCH_DELEGATES_CONNECT period before epoch start
+   </td>
+  </tr>
+  <tr>
+   <td>As the delegate, if the delegate handshake message can not be authenticated, the core software shall close the connection
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Endpoint Record-Keeping</strong>
+<p>
+<strong><em>describes how the core software (regardless of role) keeps track of key endpoint information in the network</em></strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall receive consensus endpoint advertisement messages via p2p and persist them in the database.
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>After epoch transition end event, the software shall remove from the database consensus endpoint advertisement messages from epochs more than one term length ago
+   </td>
+   <td>
+   </td>
+   <td>"one term length" since endpoint advertisements remain useful for the broadcaster delegate's upcoming term. Advertisement messages in epoch `i` shall be removed in epoch `i+5` (since they are useful in epochs `i+[1-4]`
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall receive TxA endpoint advertisement messages via p2p and persist them in the database.
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>After epoch transition end event, the software shall remove from the database TxA endpoint advertisement messages from epochs more than one term length ago
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>TxA Behavior</strong>
+<p>
+<strong><em>describes how the transaction acceptor communicates with the core node</em></strong>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the tx-acceptor, the core software shall have the delegate's public BLS key included in the configuration file
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the tx-acceptor, the core software shall close the connection if the handshake message can’t be authenticated.
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Low Level Requirements (LLR)</strong>
+<p>
+<strong><em>unfinished, ignore for now</em></strong>
+   </td>
+   <td>Derived? (If not, link to HLR)
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall, on startup, attempt to load in 'enable id control' from the configuration file
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall set 'enable id control' to "false" by default if this field is not defined in the configuration file or if the provided value is not true/false
+   </td>
+   <td>YES
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall store the values for 'enable id control' in memory
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall reject <strong>all</strong> node identity adjustment commands from the user if 'enable id control' is "false"
+   </td>
+   <td>
+   </td>
+   <td>"node identity adjustment commands" refer to all user commands in this requirements document
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall, on startup, set 'activated' to "false" by default if this field is not defined in the configuration file or if the provided value is not true/false
+   </td>
+   <td>YES
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall, on startup, set 'auto broadcast enabled' to "false" by default if this field is not defined in the configuration file or if the provided value is not true/false
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall store the setting values for 'activated' and 'auto broadcast enabled' in memory
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall read in 'initial peers' from configuration file if such field is present
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall query from Logos DNS peer discovery service if 'initial peers' field is not present in configuration file
+   </td>
+   <td>YES
+   </td>
+   <td>Exact peer discovery source to be discussed
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall store the value for 'initial peers' in memory
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall, on startup, read in 'disable new connections' from configuration file if such field is present
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall set 'disable new connections' to "false" by default if such field is not defined in the configuration file or if the provided value is not true/false
+   </td>
+   <td>YES
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The software shall store the values for 'disable new connections' in memory
+   </td>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Definitions</strong>
+   </td>
+  </tr>
+  <tr>
+   <td>Inflation Percentage: 0.0035% (per Epoch)
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>End of Epoch</strong>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall increase the Logos total supply by the inflation percentage.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall store new value for total supply in the Epoch block.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accumulate the transaction fees collected during the Epoch and the new logos generated by inflation into a single reward pool.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall store the integral value for the reward pool in the Epoch block.
+   </td>
+  </tr>
+  <tr>
+   <td>When the Epoch block is proposed, delegates must validate the total supply and reward pool values stored therein.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall determine the reward earned for each delegate and increase each delegate’s balance by the corresponding amount.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall award each delegate with an amount of logos that roughly equals the percentage of its share of delegate stake applied to the reward pool. Distributing fractional values of logos will be avoided as logos will be distributed in a round-robin (Descending order by delegate ID) fashion until each delegate's reward reaches the necessary threshold which will be determined by their stake percentage and a certain amount of error due to rounding. The rounding will always be deterministic because of the round-robin distribution.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall place a receive in each delegate’s receive chain per the rewards earned during the Epoch.
+   </td>
+  </tr>
+  <tr>
+   <td>The hash stored in the receive generated by delegate rewards shall refer to the post-committed Epoch block.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall store the integral value of the reward received by each delegate within the Epoch block.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Claiming Rewards</strong>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a request for claiming rewards.
+   </td>
+  </tr>
+  <tr>
+   <td>The claim reward request shall contain a field denoting the amount of logos that is to be claimed.
+   </td>
+  </tr>
+  <tr>
+   <td>Upon receiving a valid reward claim, the core software shall assess the total reward earned and deposit this amount to the sender’s account, generating a receive in the process.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any reward claim request containing reward value doesn’t represent the maximum value of logos that can be claimed by that account.
+   </td>
+  </tr>
+  <tr>
+   <td>To facilitate the validation of reward claim requests, the core software shall leverage a field stored in accounts that indicates the most recent epoch for which the account’s rewards have been claimed.
+   </td>
+  </tr>
+  <tr>
+   <td>Accounts that have not participated in voting during an Epoch must be excluded from claiming rewards for that Epoch, effectively reducing the size of the reward distribution tree for that epoch.
+   </td>
+  </tr>
+  <tr>
+   <td>Reward exclusion is transitive with respect to proxying, so an account that has staked to a representative that failed to vote during an epoch will not earn any trickle-down rewards from that representative.
+   </td>
+  </tr>
+  <tr>
+   <td>In order to mitigate spam attacks whereby a user repeatedly sends claim reward requests, forcing the core software to perform the computationally expensive task of determining the available reward for an account, the core software shall store, within accounts, a field that denotes the most recent epoch for which the available rewards were computed.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject claim reward requests for accounts that have either claimed rewards or checked the available awards for the previous epoch
+   </td>
+  </tr>
+  <tr>
+   <td>Upon receiving a valid request to claim rewards, the core software shall update either the claim check epoch or the claim epoch (Inclusive or) stored within the account.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Kickbacks</strong>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall allow delegates to provide kickbacks to supporting voters, whereby an announced percentage of the rewards earned by the delegate will be distributed to supporting voters in a manner similar to the aforementioned round-robin method, less the system accumulate dust.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall allow representatives to provide kickbacks to supporting voters, whereby an announced percentage of the rewards earned by the representative will be distributed to supporting voters in a manner similar to the aforementioned round-robin method, less the system accumulate dust.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall compute kickbacks, if any, when processing reward claim requests and include these amounts in the total rewards earned.
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+   <td>
+<h1>Notes</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Definitions</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Delegate-consensus: the Axios consensus protocol as defined by the white paper and the consensus requirement document. A delegate-consensus session is run by a set of N delegates, where N=32 for example.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Microblock-interval: the predefined constant interval between two consecutive microblocks. The default is 10 minutes.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Microblock-time_i: the cut off time for Batch State Blocks (BSBs) that are included in microblock_i. I.e., if the timestamp of a post-committed BSB > microblock-time_{i-1} and <= microblock-time_i, then the BSB <strong><em>should</em></strong> be included in microblock_i. In addition, Microblock-time_{i+1} - Microblock-time_i == Microblock-interval.
+   </td>
+   <td>Note: the timestamp in a post-committed BSB is its primary's <strong>local</strong> timestamp. However since the timestamp also went through the consensus protocol, it became <strong>global</strong>.
+<p>
+Note: the last microblock of an epoch is special. It must include all post-committed BSBs of the epoch, which were not included in the previous BSBs.
+   </td>
+  </tr>
+  <tr>
+   <td>Microblock-propose-time_i: the time for delegates to propose microblock_i. Microblock-propose-time_i = Microblock-time_i + t*Microblock-interval, where t must be large enough to compensate for clock differences, propagation delay, and possible fallback consensus sessions. For example, t = 1.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Clock-diff-max: the maximum clock difference allowed among delegates. It is 20 seconds.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Epoch-interval: the predefined constant interval between two consecutive epochs. The default is 12 hours.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Epoch-start-time_i: the starting time of the epoch_i.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Epoch-transition-period_i: [Epoch-start-time_i - Clock-diff-max, Epoch-start-time_i + Clock-diff-max]
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Epoch-transition-start-time_i: Epoch-start-time_i - Clock-diff-max
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Epoch-transition-end-time_i: Epoch-start-time_i + Clock-diff-max
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Delegate_epoch_i: a delegate of epoch_i.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Delegate-new_epoch_i: a node added to the set of delegates at the beginning of epoch_i. The default is 8 of them.
+   </td>
+   <td>When an epoch finishes, 1/L (L > 3) of the delegates are replaced with new ones. Since L > 3, so we have to replace less than 1/3 of delegates, given our current default configuration with 32 delegates, we can replace 8 of them. I.e, we set L = 4.
+   </td>
+  </tr>
+  <tr>
+   <td>Delegate-retired_epoch_i: a delegate of epoch_{i-1}, but not longer in epoch_i. In fact, the set of Delegate-retired_epoch_i == the set of Delegate-new_epoch_{i-L}
+   </td>
+   <td>It is replaced by a delegate-new_i.
+   </td>
+  </tr>
+  <tr>
+   <td>Delegate-persistent_epoch_i: a delegate in the set of delegate_epoch_i - the set of delegates-new_epoch_i.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>E#_i: epoch number i in consensus messages
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>int random_timeout(int init_delay, int range){
+<p>
+int offset, x = rand() % NUM_DELEGATES;
+<p>
+if (x < 2) offset = 0;
+<p>
+else if (x < 4) offset = range/2;
+<p>
+else offset = range;
+<p>
+return init_delay + offset;}
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Setup</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As Delegate-new_epoch_i, the core software shall make network connections to all other Delegate_epoch_i, S (default 300 >> Clock-diff-max) seconds before epoch-transition-start-time_i.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall synchronize with the NTP server every hour.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall stop all processing and disconnect itself from the network if the drift between its system clock and the NTP server is greater or equal to 20 seconds
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall move all timed out transaction requests from the secondary waiting list to the primary waiting list.
+   </td>
+   <td>Note that this requirement is duplicated from the one in the consensus requirement document.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Microblock</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Overview: microblocks are proposed by delegates periodically to facilitate the archiving of transaction during epoch block construction. A microblock is a checkpoint that includes all the post-committed BSBs since the previous microblock.
+<p>
+Microblocks go through the delegate-consensus protocol like other transactions. Similar to the account "send" requests, a microblock also has a previous hash field, which can be used to select the default primary. When it is time to create the next microblock, all the delegates can insert their own microblocks in the secondary waiting list with a timeout (or insert a placeholder for the microblock so that the computation of the Merkel tree root of the batch blocks is delayed). The timeout value could also be randomized and larger than the one for "send" requests.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall initiate delegate-consensus sessions for the microblock requests, where the delegate-consensus session including error handling is defined in the "primary delegate consensus" section and the "backup delegate consensus" section of the consensus requirement document.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall propose microblocks as defined in the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall propose microblock_i at microblock-propose-time_i, where microblock-propose-time_i = microblock-propose-time_{i-1} + 10 minutes.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall include in microblock_i all the post-committed BSBs (1) with timestamps <= microblock-time_i and (2) not included in microblock_{i-1}.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a Delegate_epoch_i, the core software shall propose the last microblock of epoch_{i-1}. For a regular epoch transition, the proposed time is Epoch-start-time_i + Microblock-interval. For a recall epoch transition, the proposed time is new_epoch_start_time + (Microblock-interval * 2 - new_epoch_start_time % Microblock-interval).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall use the microblock_{i-1}'s hash to compute the index of the default primary delegate of microblock_i.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall use the hash of the last microblock of epoch_{j-1} as the previous hash of the first microblock of epoch_j.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the default primary delegate, the core software shall initiate a delegate-consensus session for microblock_i at microblock-propose-time_i according to its local clock.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, when receiving a pre-prepare for microblock_i, the core software shall validate the pre-prepare according to the IDD. If the pre-prepare is valid, the core software shall start a backup consensus session (as defined in the Backup delegate consensus section of the consensus requirement document).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, when receiving an invalid pre-prepare for microblock_i, the core software shall ignore the pre-prepare message.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate that is not the default primary, if has not received a valid pre-prepare for microblock_i at microblock-propose-time_i according to its local clock, as a fallback, the core software shall add a request of microblock_i into its secondary waiting list with a timer. The timeout value = random_timeout(60, 60).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Receiving post-committed microblock_i, the core software shall validate it according to the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>NOTE: Given the current set of requirements, the default primary of a microblock will have the first chance to propose. If its consensus session fails, other delegates will propose later since they will insert the request of the microblock in their secondary waiting list. If all of them fail, recall with be initiated. Please note that nothing other than primary timeout is needed for entering the recall_wait status of the recall protocol. Also note that the propose_time is 10 minutes after the cutoff_time of any microblock. It is more than enough for the honest nodes to have the same view of what should be included in the microblock.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the primary delegate of the consensus session of a microblock, the core software shall set a recall timer if the session fails.
+   </td>
+   <td>Note that this requirement clearifies the error handling of failed microblock consensus sessions. Also note that the microblock and epoch components of the code does not need to implement this requirement. Because it summarizes two requirements in the consensus requirement "As a primary delegate, the core software shall set a recall timer if the pre_prepare timer is timed out and the prepare phase does not have two-thirds majority." and "As a primary delegate, the core software shall set a recall timer if the post_prepare timer is timed out and the commit phase does not have two-third majority."
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Epoch Block</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall initiate delegate-consensus sessions for the epochblock requests, where the delegate-consensus session including error handling is defined in the "primary delegate consensus" section and the "backup delegate consensus" section of the consensus requirement document.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall propose epochblocks as defined in the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall select the most voted delegate as the default primary delegate.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the default primary delegate, after creating or receiving the last microblock of epoch_i, the core software shall initiate a delegate-consensus session for epochblock_i.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, when receiving the pre-prepare message of an epochblock, the core software shall verify if the message conforms to the IDD. If the pre-prepare is valid, the core software shall start a backup consensus session (as defined in the Backup delegate consensus section of the consensus requirement document).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, when receiving a invalid pre-prepare message of an epochblock, the core software shall ignore the pre-prepare message.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate that is not the default primary, after creating or receiving the last microblock of epoch_i, as a fallback, the core software shall add a request of epochblock_i into its secondary waiting list with a timer. The timeout value = random_timeout(60, 60).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a representative, after receiving the post-commit message of an epochblock, the core software shall verify it against the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Receiving a validated epoch block, the core software shall split the transaction fee pool to all representatives (including delegates) according to a formula (TBD), and append a block to the receive chain of every representative.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As the primary delegate of the consensus session of an epochblock, the core software shall set a recall timer if the session fails.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Epoch Transition (During Epoch-transition-period_i)</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Overview: When an epoch finishes, D (8 by default) of the delegates are replaced with new ones. The retiring delegates still participate in consensus during Epoch-transition-period_i. At a client's side, it switches to the new epoch at epoch-start-time_i according to its local clock. I.e., after epoch-start-time_i, the client selects primaries from delegate_epoch_i, (with the index computed from the "previous hash").
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Delegate-new_epoch_i</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate-new_epoch_i, the core software shall start proposing pre-prepares only after epoch-transition-start-time_i according to its local clock.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate-new_epoch_i, the core software shall use e#_i in its pre-prepare messages.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Delegate_persistent_epoch_i</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate_persistent_epoch_i, the core software shall reject pre-prepare messages with e#_{>=i} before epoch-transition-start-time_i according to its local clock.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate-persistent_epoch_i, during epoch-transition-period_i, the core software shall start to use e#_i in its pre-prepare messages if (1) the local time >= epoch_start_time_i, (2) received a post-commit message with e#_i, or (3) received more than 1/3 pre-prepare with error code NEW_EPOCH.
+   </td>
+   <td>The reason for (2): No circular dependency among requests or blocks. I.e., there should not be a chain where an earlier transaction on the chain is post-committed with e#_i, but a later transaction on the chain is post-committed with e#_{i-1}.
+<p>
+red is added during code review
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate-persistent_epoch_i, after started using e#_i, if received a pre-prepare message with e#_{i-1}, the core software shall (1) reject it by replying a pre-prepare reject message with an error code NEW_EPOCH, and (2), queue the batch of requests in the BSB into its secondary waiting list with a timer. The timeout value = random_timeout(10, 20).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Delegate-retired_epoch_i
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate-retired_epoch_i, the core software shall only use e#_{i-1} in its pre-prepares.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate-retired_epoch_i, the core software shall enter the state of ForwardOnly (1) at Epoch-start-time_i according to its local clock, or (2) received >=1/3 pre-prepare reject messages with error code NEW_EPOCH.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate-retired_epoch_i, after entered the state of ForwardOnly, the core software (1) stop proposing pre-prepares, (2) forward the requests in the local waiting list to their default primary in epoch_i, and (3) forward requests received later to their default primary in epoch_i.
+   </td>
+   <td>(2) and (3) are deferred
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate-retired_epoch_i, at Epoch-transition-end-time_i according to its local clock, the core software shall stop accepting requests and disconnect the connections to other delegates.
+   </td>
+   <td>
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+   <td>
+<h1>Notes</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Overview</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>This is the requirements document for elections, which concerns delegate candidacy and voting. Elections are on a per epoch basis. Each epoch has a set of candidates that representatives can vote on. Each epoch we are electing a set of delegates that will replace some but not all of the current delegates. In our current configuration, we replace 8 of 32 delegates each epoch. However, delegates are allowed to run for reelection, and we could end up in a situation where the 8 elected candidates are actually current delegates, and the delegate set does not actually change.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Running for election takes place over several epochs. A candidate will announce in the first epoch, be voted on in the second epoch, learn the results of the election in the third epoch, and then actually be a delegate in the fourth, if they were elected. Reference the below visual. Delegates serve for a fixed length term, currently 4 epochs, though they may run for reelection and remain in office.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Candidates that were not reelected remain candidates until they issue a command to renounce their candidacy. Renouncing candidacy takes one epoch to take effect, just like announcing candidacy. Note, this creates a situation where if you renounce candidacy but are elected in that epoch, you must serve. You won't be added to subsequent elections, but you are forced to serve one term
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Announcing candidacy, and renouncing candidacy, are done by creating requests very similar to a send transaction and go through delegate consensus. The same goes for voting, as well as commands related to representative status.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Definitions</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Delegate-consensus: the Axios consensus protocol as defined by the white paper and the consensus requirement document. A delegate-consensus session is run by a set of N delegates, where N=32 for example.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>L: term length, in epochs, of delegates.When an epoch finishes, 1/L (L > 3) of the delegates are retired and replaced with newly elected delegates. Note however that delegates can run for reelection and remain in office, which means no delegates are actually replaced. Since L > 3, we have to replace less than 1/3 of delegates, given our current default configuration with 32 delegates, we can replace 8 of them. I.e, we set L = 4. Assume L evenly divides N.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>epoch_i: the 12 hour time period, or shorter in the event of recall, in which the delegate set is fixed.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Epoch_block_i: the epoch block created at the end of epoch_i, to be post-committed through delegate consensus, and propagated via p2p in epoch_{i+1}. Described further in the epochblock requirements document
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>candidacy request: a block that serves to announce the delegate candidacy of a representative for upcoming elections. Signed by the representative announcing candidacy
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>vote request: a block signed by a representative issuing their votes for the current epoch
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>candidates_epoch_i: the set of candidates listed in the database for the current_epoch. This is the list of candidates that representatives can vote for during epoch_i
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>delegate-elects_epoch_i: the elected N/L candidates that received the most weighted votes during epoch_{i-1}. Note, delegate-elects_epoch_i is a superset of delegates-new_epoch_{i+1}. Also, delegate-elects_epoch_i is a subset of candidates_epoch_{i-1}
+   </td>
+   <td>these are nodes that were candidates in the previous epoch and received the most votes. They are going to be full delegates next epoch. Note, the members of this set could be current delegates that were reelected
+   </td>
+  </tr>
+  <tr>
+   <td>Delegates-new_epoch_i: the set of delegates of epoch_i - delegates_epoch_{i-1}
+   </td>
+   <td>Note, this does not include delegates that remained in office because of reelection
+   </td>
+  </tr>
+  <tr>
+   <td>Delegates-persistent_epoch_i: a delegate in the set of delegates_epoch_i - delegates-new_epoch_i.
+   </td>
+   <td>Note, this includes delegates that were reelected
+   </td>
+  </tr>
+  <tr>
+   <td>Delegates-retired_epoch_i: the set of delegates of epoch_{i-1} - delegates_epoch_i. Note, the number of delegates retired == the number of new delegates
+   </td>
+   <td>Note, this is the set of delegates that actually do get retired. if you are reelected in time to not get retired, you never join this set
+   </td>
+  </tr>
+  <tr>
+   <td>Delegates_epoch_i: delegates of epoch_i
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>renounce_candidacy request: a block issued in epoch_i that attempts to remove a candidate from candidates_epoch_{i+1}
+   </td>
+   <td>Note the 1 epoch lag. Revoking candidacy takes effect in the next epoch. Note, this will have no effect if you end up being elected during epoch_i.
+   </td>
+  </tr>
+  <tr>
+   <td>minimum_delegate_stake: the minimum stake required to be a delegate. currently 0.01% of total supply
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>minimum_representative_stake: the minimum stake required to be a representative. currently 0.001% of total supply
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>candidacy_action: announce_candidacy request or renounce_candidacy request
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>candidacy_action_tip: the latest post-commited candidacy_action of an account. could be nothing if account has never sent a candidacy_action
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>representative_action: announcing yourself as a representative or renouncing yourself as a representative
+   </td>
+   <td>Note this does not include change representative. This only includes commands that affect your own status as a representative
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Candidacy</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command for a representative to announce candidacy to the network via delegate consensus
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command for a representative to renounce candidacy in the network via delegate consensus
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall write to the database when a candidacy action is post-committed via delegate consensus
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall add all representatives for which an announce_candidacy request was post-committed in epoch_i to candidates_epoch_{i+1}
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall add all members of candidates_epoch_i to candidates_epoch_{i+1} that satisfy the following requirement: are not members of delegate-elects_epoch_{i+1} and candidacy_action_tip is not a renounce_candidacy request
+   </td>
+   <td>This says you remain a candidate if you were not elected and did not renounce your candidacy.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any candidacy_action during epoch_i for a representative for which a candidacy_action was already post-committed during epoch_i
+   </td>
+   <td>A node can only submit one of announce_candidacy request or renounce_candidacy request during a single epoch. One cannot submit an announce_candidacy request followed by a renounce_candidacy request, or vice versa, in a single epoch. One cannot submit two announce_candidacy request's or two renounce_candidacy request's
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any renounce_candidacy request whose candidacy_action_tip is not an announce_candidacy request
+   </td>
+   <td>You can only renounce candidacy if you are a current candidate, or will be auto added as a candidate in a future epoch transition
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any announce_candidacy request for a representative whose candidacy_action_tip is an announce_candidacy request
+   </td>
+   <td>You can't announce candidacy if you are already a candidate or will be auto added as a candidate in a future epoch transition.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall add all members of delegates_epoch_i to candidates_epoch_{i+1} whose current term ends after epoch_{i+2} and whose candidacy_action_tip is not a renounce_candidacy request
+   </td>
+   <td>this ensures continuity. if a delegate is set to retire, they are added to the candidate list at the proper time such that they will remain a delegate
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any candidacy_action for a representative that has not staked at least the minimum_delegate_stake
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any candidacy_action from an account that is not also a representative
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accept candidacy_action that conform to the IDD
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Representative</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command for an account to become a representative in the network via delegate consensus
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command for an account to change their representative in the network via delegate consensus
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command for an account to renounce being a representative via delegate consensus
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any representative_action during epoch_i from a representative for which a representative_action was already post-committed during epoch_i
+   </td>
+   <td>Can only do one of announce or renounce per epoch. Can change representative multiple times
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command for a representative to delegate their entire voting power to a different account. This other account will issue votes on behalf of the representative
+   </td>
+   <td>This allows a representative who would normally issue their own votes to issue their votes from a different account. The votes from that different account will be treated as if they came from the representatives account. This is done to minimize exposure of the private key that is guarding the staked funds.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall designate a representative of a new account to be the representative of the account sending that new account the initial funds
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject a command to become a representative for an account that has not staked the minimum_representative_stake
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accept a command to become a representative that conforms to the IDD
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Election</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a command for a representative announce their delegate candidate votes to the network via delegate consensus
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall write to the database when a vote request is post-committed via delegate consensus
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject vote requests during epoch_i that contain votes for representatives not listed in candidates_epoch_i
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject a vote request that does not contain exactly N/L votes
+   </td>
+   <td>Reps have to use all of their votes
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject vote requests that contain votes for more than N/L different candidates
+   </td>
+   <td>Cannot split votes
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any vote request during epoch_i from a representative for which a vote request has already been post-committed during epoch_i
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall weight each vote according to the formula described in the design document
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall weight each vote that occurred during epoch_i based on representative_actions and change representative requests that happened prior to epoch_i
+   </td>
+   <td>This says that any change representative request during epoch_i does not affect the weighting of votes issued during epoch_i. The stake for each representative is constant for each epoch, and only changes on epoch_transition. This also says announcing to be a representative during epoch_i does not allow you to vote until epoch_{i+1}, and renounce in epoch_i does not take effect until epoch_{i+1}. Meaning if I renounce my representative status in epoch_i, I can still vote in epoch_i
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall determine delegate voting power, to be used during delegate consensus, according to the formula described in the design document
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall populate the delegates field of epoch_block_i as follows: the N/L candidates who received the most weighted votes during epoch_i (this is delegate-elects_epoch_{i+1}), along with all members of delegates_epoch_{i+1} that are not members of delegate-elects_epoch_{i-3}
+   </td>
+   <td>Anyone who is a member of delegate-elects_epoch_{i-3} is serving their last term during epoch_{i+1}. The delegates listed in epoch_block_i are the delegates for epoch_{i+2}
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, upon receiving a pre-prepare for epoch_block_i, the core software shall validate the N/L candidates who received the most weighted votes during epoch_i
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall break vote ties while calculating delegate-elects_epoch_i by most stake, followed by most epochs spent as delegate, followed lastly by greatest value of delegate address
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall add a representative to delegate-elects_epoch_i even if candidacy_action_tip is a renounce_candidacy request
+   </td>
+   <td>Note, renounce_candidacy only works if you were not elected.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject any vote request from an account that is not also a representative
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accept vote requests that conform to the IDD
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Note: Yellow requirements have been moved to epoch requirements
+   </td>
+   <td>
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+   <td>
+<h1>Notes</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Definitions</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>delegate: one of the n Logos network delegates within an epoch, where n = 3f+1, and f is the (weighted) number of byzantine faulty delegates that the network can tolerant. A delegate has two weights, one is based on the votes it received when elected, the other is based on its stake. Both of them are capped.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><em>Note: A delegate has two weights, one of them is based on the votes it received, and the other is based on the stake it advertised when elected. For a consensus phase to reach majority, both thresholds must be met.</em>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>two-third majority: > 2f of weighted delegates approved a phase of a consensus session.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>three-fourth majority: >= (3/4)n of weighted delegates approved a phase of a consensus session
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>one-third rejection: > f of weighted delegates explicitly reject a phase of a consensus session.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>int random_timeout(int init_delay, int range){
+<p>
+int offset, x = rand() % NUM_DELEGATES;
+<p>
+if (x < 2) offset = 0;
+<p>
+else if (x < 4) offset = range/2;
+<p>
+else offset = range;
+<p>
+return init_delay + offset;}
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Blacklisting</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, the core software shall maintain a blacklist of client addresses that had provable malicious activities.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, the core software shall remove a blacklist item inserted during epoch_i at the end of epoch_{i+1}.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Note: to prevent someone from blocking (for many epochs) an account that had a provable malicious activity in the past, by replay the proof every epoch, we need a way to identify when the malicious activity happened. Including a timestamp in the proof works, but need extra bytes. Since we already have the Sequence Number in single state blocks, we will use that.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, the core software shall ignore a provable malicious activity if the sequence number in the request is lower than the sequence number of the last successful request of the account.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, the core software shall broadcast the provable malicious activities to the network.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, received a message proving a malicious activity of an account, the core software shall verify the proof. If the proof is valid and activity is malicious, the core software shall blacklist the account. Otherwise, the core software shall ignore the message.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Note: to be provable, the evidence must include the account's signature. So a send request with a valid signature and a invalid PoW is a provable malicious activity. But if the signature is invalid, it is not a provable activity. For the detailed format, please reference the IDD
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall add a double-spend send request to the blacklist. If two different and individually valid transactions of the same account use the same previous hash value, then the account double-spends.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, the core software shall maintain a local gray-list of client addresses that had unprovable malicious activities.
+   </td>
+   <td>As discussed on the Sep 11, there will be a RPC interface where nodes can input their own rules of graylist.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Initiating Consensus</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core Software shall provide a public interface to receive transaction requests that conform to the Interface Description Document (IDD).
+   </td>
+   <td>IDD is created and will be updated as needed, which will have the format of all messages that are input/output of our software. Anything that leaves the software or comes in from an outside source, even if it is initiated by the core software itself, needs to be listed in the document.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall initiate consensus sessions for client send requests that conform to the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>See the epoch_requirement document for other requests for which the core software shall initiate consensus sessions.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Transaction Request</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Overview: When receiving a transaction request, a delegate can immediately process it, queue the request, forward it to another delegate, or reply immediately. In addition, when a delegate sees a request for the first time either as an individual request or in the batchblock of a pre-prepare message, it performs several validity checks.
+<p>
+Every request has a default primary, whose index can be computed from the ""Previous hash"" of the account, as defined in the IDD. E.g. the last 5 bits of the Previous hash is an integer (evenly distributed) in [0,31], which can be used as an index to find the primary. So based on the Previous hash field in the request (also in the account stored in the local database), every delegate can compute the index of the default primary. When a delegate receives a new request, if it is not the default primary, it will forward the request to the default primary. It also stores the request locally in the secondary waiting list and set a timer. When the timer expires, if the request has not been handled by the default primary, this delegate will handle it by moving the request to its primary waiting list.
+<p>
+Every delegate has two waiting lists, the primary waiting list and the secondary waiting list. The items in the primary waiting list will be used when creating a new batch state block. The items in the secondary waiting list have timers. When a timer expires, the item is moved from the secondary waiting list to the primary waiting list, so that it could be included in later batch state blocks."
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reply with the post-commit if the transaction request is a duplicate of a previous transaction that is already in a post-commit.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall ignore the new transaction request if the request is already in an ongoing consensus session
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall ignore the new transaction request if the request is already in the local node's waiting list.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>If the local node is not the default primary of a transaction request, the core software shall store the request in its secondary waiting list with a timer. The timeout value is 5 seconds.
+   </td>
+   <td>Clients should pick delegates based on the previous send hash and then send to 2nd delegate if it doesn’t receive the post-commit within a timeout.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall monitor the time out status of all transaction requests in the secondary waiting list.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall move all timed out requests from the secondary waiting list to the primary waiting list.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Verification</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reject a transaction request if the associated account is blacklisted.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary, the core software shall reject the transaction if it is gray-listed.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core Software shall perform validity checks on the transaction amount before processing the transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup, the core software shall perform validity checks on the time-stamp of the Batch State Block. If the difference between the message time-stamp and the local clock is larger than 20 seconds, then the batch state block shall be rejected.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core Software shall perform validity checks on the transaction target before processing the transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core Software shall perform validity checks on the previous transaction hash value before processing the transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall perform validity checks on transaction fee amount (lower than the minimum transaction fee defined in the epoch block).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary, the core Software shall perform validity checks on the PoW before processing the transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Note of the reservation status: For every account, a delegate can only prepare (reserve) for the same previous hash (equivalent to the PBFT sequence number) once. Once prepared, it cannot be unprepared until the epoch after the next, I.e. > one epoch. If transaction A is prepared, but due to any reason the batch state block cannot be processed, then it is OK to prepare for the same transaction A if found in another batchblock.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, the core Software shall perform validity checks on the reservation status of the account associated with the transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, when verifying the reservation status of an account, the core Software shall return true if the account is not reserved yet, or is reserved by the same transaction request, or is reserved for more than one epoch (I.e., if an account is reserved in epoch_i, it will be un-reserved at the beginning of epoch_{i+2}, if it has not been un-reserved already.).
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>If the reservation status is valid, the core Software shall reserve the account with the current epoch number and the current transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core Software shall perform validity checks on the signature before processing the transaction request.
+   </td>
+   <td>for performance reason, more expensive validity check should be performed later
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall send a rejection message with the proper error code if a transaction request cannot be validated.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, the core software shall start the bootstrap protocol if a gap (unknown previous hash) in transaction request is detected.
+   </td>
+   <td>(1) Similarly if a delegate realizes that it missed some previous messages, it shall bootstrap. (2) Question: will there be too many bootstraps? No, since we put the account causing the bootstrap in the gray list temporarily.
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall add an entry into the blacklist if a provable malicious transaction is detected.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall add an entry into the gray-list if an unprovable malicious transaction is detected.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall accept a batch of transaction requests as a transaction request.
+   </td>
+   <td>Sep 10 2018, note that BSB changed to batch of requests
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Summary: the following sections of requirements define the Axios consensus</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Primary delegate consensus</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall initiate the PBFT Axios consensus after the transaction has passed the validation checks.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall have at most one on going primary consensus session.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall propose a pre-prepare message immediately for valid transaction requests in the primary waiting list, if the primary does not have an ongoing primary consensus session.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall accumulate valid transaction requests in the primary waiting list when it has an ongoing primary consensus session.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall sign the proposed pre-prepare message with its own BLS signature private key.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall broadcast the Pre-Prepare message in the format that is called out in the IDD to all the other delegates of the current epoch.
+   </td>
+   <td>All the other delegates become backup delegate for this consensus session
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall set a pre-prepare timer once the pre-prepare message is broadcasted. The timeout value of the timer is 60 seconds.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall perform validity checks for all the prepare message it receives according to the IDD.
+   </td>
+   <td>Check the validity of the messages.
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall abort the proposed pre-prepare message if the prepare messages received did not reach two-thirds majority when the pre-prepare timer is expired.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall reject, by sending reject messages with proper error codes to the clients, the subset of the transaction requests which had one-third rejection, once it aborts the last pre-prepare message.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall re-propose a subset of the transaction requests in a new pre-prepare message if the requests did not have one-third rejection, once it aborts the last pre-prepare message. The new pre-prepare message shall use the same previous hash and sequence number as the aborted one.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall broadcast a post-commit message defined in the IDD to the network if the proposed batchblock reached three-fourth majority before the pre-prepare timer is expired.
+   </td>
+   <td>Note the details on how to sign the messages are intentionally omitted as they should be part of the software design document. Remember, SRS = What is the software doing. SDD = How does it do it and IDD = What format is the data we are operating on for external I/O
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall broadcast a post-prepare message defined in the IDD to all the backup delegates if the proposed batchblock reached two-third majority but not three-fourth majority after the pre-prepare timer is expired.
+   </td>
+   <td>The primary broadcasts the post-prepare message to all the backup delegates.
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall set a post-prepare timer once the post-prepare message is broadcasted. The timeout value of the timer is 60 seconds.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall broadcast a post-commit message defined in the IDD to the network if the validated commit messages reached two-third majority before the post-prepare timer is expired.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall send a response back to the client if a valid post-commit message has been created or received and the software is not under load per TBD.
+   </td>
+   <td>Or we use the gossip based block propagation and no direct response to the clients
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall set a recall timer if the pre_prepare timer is timed out and the prepare phase does not have two-third majority.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall set a recall timer if the post_prepare timer is timed out and the commit phase does not have two-third majority.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a primary delegate, the core software shall initiate the recall protocol once the recall timer is expired and no valid post-commit message has been received.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>After starting, the core software shall initiate a primary consensus session with an empty BatchStateBlock.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Backup delegate consensus</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall verify the validity of a Pre-Prepare message according to the format called out in the IDD once a Pre-Prepare message is received from a valid primary delegate.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall verify that the transaction requests contained within the Pre-Prepare message is a valid candidate for the requesting account.
+   </td>
+   <td>A little vague here. Perhaps this is what we need? We need to find a good balance between how explicit a requirement should be vs how much it costs to maintain, test and update the requirement in the future.
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall reject any invalid transaction requests within a pre-prepare message.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall send a reject message for all transaction requests that are rejected per the IDD.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall allow the same valid request to appear in multiple batch blocks included in different pre-prepare messages.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall send a prepare message in a format that is specified in the IDD back to the primary delegate once the pre-prepare message is validated and accepted.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall start the bootstrap protocol if an unknown previous hash is detected in a transaction request.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall start the slash protocol if a provable malicious pre-prepare message is received.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall verify the validity of a Post-Prepare message according to the format called out in the IDD once a post-prepare message is received from the primary delegate.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall send a commit message in a format that is specified in the IDD back to the primary delegate once the post-prepare message is validated and accepted.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>After sending the prepare message of pre-prepare_i containing BatchStateBlock_i, if the local node receives pre-prepare_j containing BatchStateBlock_j from the same delegate, where pre-prepare_i and pre-prepare_j have the same previous hash and the same sequence number and BatchStateBlock_j is a subset of BatchStateBlock_i, then the core software shall drop the backup consensus session for pre-prepare_i and start a backup consensus session for pre-prepare_j
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Fallback delegate consensus</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>Notes, in the Aug 28, 2018 design meeting, 3 alternatives of fallback consensus were discussed, (A) retry by the client, (B) add the requests in the pre-prepare (individually or as a whole batch) into the secondary waiting list by all the backup delegates, (C) the original broadcast based fallback consensus. The choice (A) will be implemented by the clients. In addition, either (B) or (C) will be implemented by the delegates.
+   </td>
+   <td>To-discuss, for (B), should the requests be inserted individually or as a whole batch? If individually, the requests could end up in different batch state blocks. If as a batch, then the secondary waiting list and the primary waiting list should be able to accommodate both individual requests and batch state blocks. Also, we have the requirement that once a post-commit is received, the individual request listed on the waiting list should be removed if they are covered by the post-commit. We could extend this requirement so that the batch can be removed too.
+   </td>
+  </tr>
+  <tr>
+   <td>TO-KEEP (very likely), the requirements below are for the secondary waiting list based fallback consensus. I.e., the design choice (B)
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a backup delegate, the core software shall store the batch of requests in the batch state block of a valid pre-prepare in its secondary waiting list with a timer. The timeout value = random_timeout(10, 20). Once the timer expires, the batch state block shall be moved to the primary waiting list and later be proposed by the local node in a pre-prepare message.
+   </td>
+   <td>To-discuss, the timer can be randomized with a cap. So that a small number (1 or 2 with high probability) of backup delegates will re-propose the batch state block earlier than other backup delegates.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td><strong>Post-commit</strong>
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>As a delegate, the core software shall remove the requests in waiting lists if they are included in a post-commit just received.
+   </td>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall update their local database once a valid post-commit is received the first time or created locally.
+   </td>
+   <td>A little vague here. But the node should perform the validation as listed in the "Verification" section.
+   </td>
+  </tr>
+  <tr>
+   <td>For the post-commit of a "send" transaction, the core software shall store the post-commit and update the following fields: sender’s balance, target’s balance, sender's send chain, target's receive chain, and transaction fee pool.
+   </td>
+   <td>
+   </td>
+  </tr>
+</table>
+
+
+
+<table>
+  <tr>
+   <td>
+<h1>Requirements</h1>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>
+<h3>Networking</h3>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall manage connections in the bootstrap code.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall have two types of connections, client and server.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall make these connections available to the appropriate client/server to satisfy requests, (tips, pull).
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall allow for connections to be pooled so as to be re-used.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall close sockets in the client/server destructors, such that after the connection is no longer needed, we do not leak the resource.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall create client connections based on outstanding pull requests, either allocating a new connection for a pull, or reusing from existing connections.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall track the blocks received and compute block rate.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall disable connections that are not performing.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall set the socket recv/send buffer size as appropriate.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+<h3>Initialization</h3>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall request tips from its peer.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall have tips request/response in a loop to periodically check if the process is in sync.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall not issue new pull requests provided the system is still processing requests.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+<h3>Pulls</h3>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall decide to pull if its behind its peer for a given delegate.
+   </td>
+  </tr>
+  <tr>
+   <td>The decision is made due to a comparison of either timestamps or sequence numbers (preferred).
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall request epoch and micro blocks first, followed by batch state blocks.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall allow for downloads in parallel using threads.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+<h3>Thread Pool</h3>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall after making a decision to pull, make a request using a structure that is passed to a thread pool for processing.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall use a structure that has a start and an end hashes for epoch, micro, and batch blocks.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall implement a generic request for a pull which can pull either of the three supported blocks in any combination.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall have the thread pool process a request at a time off the queue.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall process the request by making a client request to the peer's server asking for the desired blocks.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+<h3>Traversing blocks</h3>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall have it's peer server send each requested block sequentially iterating from start to end using a next pointer.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall handle network errors in this transmission by closing the socket and logging the error.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall re-issue a request for the missing blocks again using the tips service.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall continue in a loop periodically checking its peer to see if it is behind.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall run in an on-going bootstrap loop which is initiated from the top-level.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall not do pulls if the system is in sync with its peers.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall wait in the case pulls are on-going.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+<h3>API</h3>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide an api to initiate the process.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a method to initiate the process with no peer specified.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall provide a method to initiate the process with a specific peer specified.
+   </td>
+  </tr>
+  <tr>
+   <td>
+   </td>
+  </tr>
+  <tr>
+   <td>
+<h3>Validation</h3>
+
+
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall transfer blocks to the client.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall queue arriving blocks.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall sort the arriving blocks when the queue is filled with n items.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall then validate and apply to the database the blocks.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall then remove the applied blocks from the queue, leaving those which could not be validated until more blocks arrive from the network.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall implement three queues, one for each block type (epoch, micro, batch state block).
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall use these queues to perform validation/apply.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall use the validation/apply methods of each respective block type.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reach n batch state blocks, and then try to validate, if none can be validated, it will wait for the next arrivals.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software queues can increase when waiting for more arrivals.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software queues can decrease after blocks are validated/applied.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall check to see if we reached a micro block tip, then validate and apply the micro block.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall keep track of each delegate's tips in the database.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall check the tips, either from what was received in memory, or from the database, to see if we reach the next micro block.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall then validate and apply the micro block.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall reach an epoch block tip, it will validate and apply the epoch block.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall keep track of the micro block tip.
+   </td>
+  </tr>
+  <tr>
+   <td>The core software shall check the tip is reached that matches the next epoch block, and validate/apply the epoch block.
+   </td>
+  </tr>
+</table>

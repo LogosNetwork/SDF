@@ -1,0 +1,34 @@
+@startuml
+center header <font size="24" color=black>Candidacy State for NonDelegates</font>
+state "Non Candidate" as N {
+    state "Announced" as NA
+    state "Renounced" as NR
+    state "Never Said Anything" as NSA
+    NR --> NA : AnnounceCandidacy
+    NSA --> NA : AnnounceCandidacy
+    NSA --> NSA : EpochTransition
+    NR --> NR : EpochTransition
+state "Delegate Elect" as D {
+
+    state "Announced in Previous Epoch" as DA
+    state "Renounced in Previous Epoch" as DR
+}
+D : see delegates candidacy diagram for further transitions
+}
+
+[*] --> NSA
+
+state "Candidate" as C {
+
+    state "Announced" as CA
+    state "Renounced" as CR
+    CA --> CR : RenounceCandidacy/StopRepresenting
+    CA --> CA : EpochTransition (not elected)
+}
+
+
+NA --> CA : EpochTransition
+CR --> NR : EpochTransition (not elected)
+CA --> DA : EpochTransition (elected)
+CR --> DR : EpochTransition (elected)
+@enduml    

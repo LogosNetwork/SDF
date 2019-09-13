@@ -1,0 +1,25 @@
+@startuml
+
+interface EpochInfo
+interface EpochEventsNotifier
+
+EpochInfo <|-- EpochManager
+EpochEventsNotifier <|-- EpochManager
+
+EpochManager : MessageValidator _validator
+EpochManager : BatchBlockConsensusManager _batch_manager
+EpochManager : MicroBlockConsensusManager _micro_manager
+EpochManager : EpochConsensusManager _epoch_manager
+EpochManager : ConsensusNetIOManager _netio_manager
+
+EpochManager : GetEpochNumber()
+EpochManager : IsWaitingDisconnect()
+EpochManager : OnNewEpochPostCommit()
+EpochManager : OnNewEpochReject()
+
+@enduml
+
+EpochManager : GetConnection
+EpochManager : GetConnectionName
+EpochManager : GetDelegateName
+EpochManager : GetStateName

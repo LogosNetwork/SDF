@@ -1,0 +1,18 @@
+@startuml
+abstract ConsensusManager
+ConsensusManager <|-- MicroBlockConsensusManager
+
+MicroBlockConsensusManager : ArchiverMicroBlockHandler microblock_handler
+
+MicroBlockConsensusManager : ApplyUpdates()
+MicroBlockConsensusManager : Validate()
+MicroBlockConsensusManager : QueueRequestPrimary()
+MicroBlockConsensusManager : PrePrepareGetNext()
+MicroBlockConsensusManager : PrePreparePopFront()
+MicroBlockConsensusManager : PrePrepareQueueEmpty()
+MicroBlockConsensusManager : PrePrepareQueueFull()
+MicroBlockConsensusManager : PrimaryContains()
+MicroBlockConsensusManager : QueueRequestSecondary()
+MicroBlockConsensusManager : MakeConsensusConnection()
+
+@enduml

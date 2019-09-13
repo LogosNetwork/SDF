@@ -1,0 +1,108 @@
+@startuml
+center header
+<font size="24" color=black><b>Reelections</b></font>
+<font size="24" color=black>Electing <b>one</b> delegate</font>
+<font size="24" color=black>Assume all representatives have equal voting power</font>
+endheader
+
+actor "Representative 1" as R1
+actor "Representative 2" as R2
+actor "Representative 3" as R3
+collections Delegates
+
+activate Delegates
+group epoch 0 (announcing)
+R1 -> Delegates : AnnounceCandidacy
+Delegates -> Delegates : consensus on AnnounceCandidacy for Rep1
+Delegates -> Delegates : record Rep1 as pending candidate
+Delegates -> R1 : BSB with AnnounceCandidacy signed by Rep1
+R1 -> R1        : record Rep1 as pending candidate
+Delegates -> R2 : BSB with AnnounceCandidacy signed by Rep1
+R2 -> R2        : record Rep1 as pending candidate
+Delegates -> R3 : BSB with candidacy request signed by Rep1
+R3 -> R3        : record Rep1 as pending candidate
+end
+
+group epoch 1 (voting, Rep1 is candidate)
+group epoch transition
+Delegates -> Delegates : create epoch block 0
+Delegates -> Delegates : Change Rep1 candidacy from pending to active
+R1 -> R1 : Change Rep1 candidacy from pending to active
+R2 -> R2 : Change Rep1 candidacy from pending to active
+R3 -> R3 : Change Rep1 candidacy from pending to active
+end
+R1 -> Delegates : ElectionVote for Rep1
+Delegates -> Delegates : consensus on ElectionVote
+R2 -> Delegates : ElectionVote for Rep1
+Delegates -> Delegates : consensus on ElectionVote
+R3 -> Delegates : Election vote for Rep1
+Delegates -> Delegates : consensus on ElectionVote
+end
+group epoch 2 (distribute results, Rep1 is delegate-elect and no longer candidate)
+group epoch transition
+
+Delegates -> Delegates : create EpochBlock1 with Rep1 listed as delegate-elect
+Delegates -> Delegates : Remove Rep1 from candidates
+
+Delegates -> R1 : EpochBlock1
+R1 -> R1 : Remove Rep1 from candidates
+Delegates -> R2 : EpochBlock1
+R2 -> R2 : Remove Rep1 from candidates
+Delegates -> R3 : EpochBlock1
+R3 -> R3 : Remove Rep1 from candidates
+end
+
+
+
+group connect_peer
+R1 -> Delegates : connect to peers
+
+end
+end
+group epoch 3 (Rep1 is delegate new)
+
+R1 -> Delegates : consensus messgaes
+activate R1
+Delegates -> R1 : Consensus messages
+
+end
+
+group epoch 4 (Rep1 is delegate persistent)
+
+R1 -> Delegates : consensus messgaes
+Delegates -> R1 : Consensus messages
+
+end
+group epoch 5 (Rep1 is delegate persistent. Rep1 is candidate again)
+group epoch transition
+Delegates -> Delegates : create EpochBlock4
+Delegates -> Delegates : add Rep1 as active candidate
+R1 -> R1 : add Rep1 as active candidate
+R2 -> R2 : add Rep1 as active candidate
+R3 -> R3 : add Rep1 as active candidate
+end
+R2 -> Delegates: ElectionVote for Rep1
+R3 -> Delegates: ElectionVote for Rep1
+
+end
+group epoch 6 (Rep1 is in last epoch of term. Rep1 was reelected. Rep1 is no longer candidate)
+group epoch transition
+Delegates -> Delegates : create EpochBlock5 with Rep1 as delegate-elect
+Delegates -> Delegates : Remove Rep1 from candidates
+R1 -> R1 : Remove Rep1 from candidates
+Delegates -> R2 : EpochBlock5
+
+R2 -> R2 : Remove Rep1 from candidates
+Delegates -> R3 : EpochBlock5
+
+R3 -> R3 : Remove Rep1 from candidates
+end
+R1 -> Delegates : Consensus messages
+Delegates -> R1 : Consensus messages
+end
+group epoch 7 (Rep1 starts new term)
+R1 -> Delegates : Consensus messages
+Delegates -> R1 : Consensus messages
+end
+
+@enduml

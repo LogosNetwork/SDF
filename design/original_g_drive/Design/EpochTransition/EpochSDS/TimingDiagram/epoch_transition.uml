@@ -1,0 +1,22 @@
+@startuml
+
+scale 20 as 100 pixels
+Title Epoch Transition Period
+concise "Timeline" as TL
+
+TL is Connect_peer
+
+@-20
+TL is transition_start
+@0
+TL is epoch_start
+@20
+TL is transition_end
+
+@TL
+@-40 <-> @0 : {300 seconds}
+
+caption \nEvery epoch transition period has four timer events.
+@enduml
+
+\nConnect_peer: 300 seconds before epoch start. \nTransition_start: 20 seconds before epoch start. \nEpoch_start: epoch start time as agreed by the network. \nTransition_end: 20 seconds after epoch start.

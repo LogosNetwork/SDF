@@ -1,0 +1,31 @@
+@startuml
+
+center header <font size="24" color=black>Representative State</font>
+
+
+state "Non Representative - Can't vote" as N {
+    state "Pending Start" as NA
+    state "Stopped" as NR
+    state "Never Said Anything" as NSA
+    NR --> NA : StartRepresenting/AnnounceCandidacy
+    NSA --> NA : StartRepresenting/AnnounceCandidacy
+}
+
+[*] --> NSA
+
+state "Representative - Can Vote" as R {
+
+    state "Started" as RA
+    state "Pending Stop" as RR
+    RA --> RR : StopRepresenting
+}
+
+NA --> RA : EpochTransition
+RR --> NR : EpochTransition
+NSA --> NSA : EpochTransition
+RA --> RA : EpochTransition
+NR --> NR : EpochTransition
+
+
+
+@enduml

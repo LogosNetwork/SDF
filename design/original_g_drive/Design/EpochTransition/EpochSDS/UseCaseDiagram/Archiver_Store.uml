@@ -1,0 +1,13 @@
+@startuml
+
+actor localDB
+
+actor MicroBlockConsensusManager_store
+
+rectangle Archiver {
+	MicroBlockConsensusManager_store -- (CommitToDatabase MicroBlock)
+	(CommitToDatabase MicroBlock) --> (MicroBlockHandler::ApplyUpdates)
+	(MicroBlockHandler::ApplyUpdates) -- localDB
+}
+
+@enduml

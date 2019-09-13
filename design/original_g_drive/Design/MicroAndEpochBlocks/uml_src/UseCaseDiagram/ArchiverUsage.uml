@@ -1,0 +1,20 @@
+@startuml
+
+actor localDB_read
+actor localDB_write
+
+actor MicroBlockConsensusManager_store
+
+rectangle Archiver {
+	MicroBlockConsensusManager -- (Validate MicroBlock)
+	(Validate MicroBlock) --> (MicroBlockHandler::Validate)
+	(MicroBlockHandler::Validate) -- localDB_read
+}
+rectangle Archiver {
+	MicroBlockConsensusManager_store -- (CommitToDatabase MicroBlock)
+	(CommitToDatabase MicroBlock) --> (MicroBlockHandler::ApplyUpdates)
+	(MicroBlockHandler::ApplyUpdates) -- localDB_write
+}
+
+@enduml
+EventProposer

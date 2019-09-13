@@ -1,0 +1,31 @@
+@startuml
+participant ConsensusContainer
+activate ConsensusContainer
+create EpochPeerManager
+ConsensusContainer -> EpochPeerManager
+activate EpochPeerManager
+create PeerAcceptor
+EpochPeerManager -> PeerAcceptor
+activate PeerAcceptor
+PeerAcceptor -> PeerAcceptor : Accept
+participant "EpochManager:_cur_epoch" as _cur_epoch
+create _cur_epoch
+ConsensusContainer -> _cur_epoch
+activate _cur_epoch
+[-> ConsensusContainer : Epoch Transition Start
+participant "EpochManager:_tmp_epoch" as _tmp_epoch
+create _tmp_epoch
+ConsensusContainer -> _tmp_epoch
+activate _tmp_epoch
+...
+[-> PeerAcceptor : Peer Connect
+PeerAcceptor -> EpochPeerManager : OnConnectionAccepted:socket
+EpochPeerManager -> EpochPeerManager : Read Peer's KeyAdvertisement
+[-> EpochPeerManager : Peer {Pub Key,Delegate Id,Delegate Set:{Old,New}}
+EpochPeerManager -> ConsensusContainer : Bind socket
+alt Is New Delegate Set
+    ConsensusContainer -> _tmp_epoch : Bind socket to ConsensusNetIOManager/ConsensusNetIO/ConsensusManager/ConsensusConnection
+else
+    ConsensusContainer -> _cur_epoch : Bind socket to ConsensusNetIOManager/ConsensusNetIO/ConsensusManager/ConsensusConnection
+end
+@enduml

@@ -1,0 +1,53 @@
+package Cache_Component #lightgreen{
+
+class Cache {
+	PendingBlockContainer block_container
+	BlockWriteQueue write_q
+	
+	bool AddEpochBlock(EBPtr block)
+	bool AddMicroBlock(MBPtr block)
+	bool AddRequestBlock(RBPtr block)
+
+	void StoreEpochBlock(EBPtr block)
+	void StoreMicroBlock(MBPtr block)
+	void StoreRequestBlock(RBPtr block)
+	
+	bool IsBlockCached(const BlockHash &b)
+}
+
+class PendingBlockContainer {
+	list<EpochPeriod> epochs;
+	unordered_set<BlockHash> cached_blocks;
+	unordered_map<BlockHash, pointer_to_RB_chain> hash_dependency_table;
+	unordered_map<AccountAddress, pointer_to_RB_chain> account_dependency_table;	
+}
+
+class EpochPeriod {
+	uint32_t epoch_num
+	EBPtr eb
+	list<MBPtr> mbs
+	unordered_set<BlockHash> rbs_next_mb_depend_on	
+	list<RBPtr> rbs[NUM_DELEGATES]
+}
+PendingBlockContainer "1" *-- "many" EpochPeriod
+
+class BlockWriteQueue {
+	queue<EBPtr> ebs
+	queue<MBPtr> mbs
+	queue<RBPtr> rbs
+}
+
+Cache "1" *-- "1" BlockWriteQueue : store blocks
+Cache "1" *-- "1" PendingBlockContainer : cache blocks
+
+}
+
+class NonDelegatePersistentManager
+Cache --> NonDelegatePersistentManager : validate block\n aggregated signatures
+Cache --> NonDelegatePersistentManager : validate block\n content
+
+package Database{}
+
+BlockWriteQueue --> Database : write blocks to DB
+
+@enduml

@@ -1,0 +1,138 @@
+@startuml
+center header <font size="36" color=red><b>Cannot Announce and Renounce in same epoch</b></font>
+state "Acting Delegate" as D
+state "Not a Delegate" as ND
+
+state "Not a Delegate" as ND {
+    state "Announced" as NDA {
+        [*] --> NDANC
+        state "Not a Candidate" as NDANC
+        state "Candidate" as NDAC
+        NDANC --> NDAC : EpochTransition
+        NDAC --> NDR : RenounceCandidacy
+        NDAC --> NDAC : EpochTransition and lost election
+
+    }
+    state "Renounced" as NDR {
+        [*] --> NDRC
+        state "Candidate" as NDRC
+        state "Not a candidate" as NDRNC
+        NDRC --> NDRNC : Epoch Transition and lost Election
+    }
+    state "Never said anything" as NSA
+
+    [*] --> NSA
+    NSA --> NDA : AnnounceCandidacy
+    NDRNC --> NDANC : AnnounceCandidacy
+}
+
+state "Delegate Elect" as DE {
+    state "Announced" as DEA
+    state "Renounced" as DER
+}
+
+state "Acting Delegate" as D {
+    state "Delegate First Epoch" as D1 {
+
+    state "Announced" as D1A {
+        state "Not a Candidate" as D1ANC
+    }
+    state "Renounced" as D1R {
+        state "Not a Candidate" as D1RNC
+    }
+
+    D1A --> D1R : RenounceCandidacy 
+    D1R --> D1A : AnnounceCandidacy
+    }
+    D1A --> D2A : Epoch Transition
+    D1R --> D2R : Epoch Transition
+    state "Delegate Second Epoch" as D2 {
+
+    state "Announced" as D2A {
+        state "Not a Candidate" as D2ANC
+    }
+
+    state "Renounced" as D2R {
+        state "Not a Candidate" as D2RNC
+    }
+    D2A --> D2R : RenounceCandidacy
+    D2R --> D2A : AnnounceCandidacy
+    }
+
+
+    state "Delegate Third Epoch" as D3 {
+    state "Announced" as D3A {
+        state "Candidate" as D3AC
+        state "Not a Candidate" as D3ANC
+    }
+
+    state "Renounced" as D3R {
+        state "Candidate" as D3RC
+        state "Not a Candidate" as D3RNC
+    }
+    D3AC --> D3RC : RenounceCandidacy
+
+    D3RNC --> D3ANC : AnnounceCandidacy
+    }
+
+    D2A --> D3AC : Epoch Transition
+    D2R --> D3RNC : Epoch Transition
+    state "Delegate Fourth Epoch" as D4 {
+    state "Announced" as D4A {
+        state "Candidate" as D4AC {
+            state "Retiring" as D4ACR
+        }
+        state "Not a Candidate" as D4ANC {
+            state "Delegate Elect" as D4ANCDE
+            state "Retiring" as D4ANCR
+        }
+    }
+
+    state "Renounced" as D4R {
+        state "Candidate" as D4RC {
+            state "Retiring" as D4RCR
+        }
+        state "Not a Candidate" as D4RNC {
+            state "Delegate Elect" as D4RNCDE
+            state "Retiring" as D4RNCR
+        }
+    }
+    }
+
+    ' 3rd epoch to 4th epoch
+    D3RNC --> D4RNCR : EpochTransition
+    D3AC --> D4ANCDE : EpochTransition and won election
+    D3AC --> D4ACR   : EpochTransition and lost election
+    D3RC --> D4RNCDE : EpochTransition and won election
+    D3RC --> D4RNCR  : EpochTransition and lost election
+    D3ANC --> D4ACR  : EpochTransition
+
+    ' transitions within 4th epoch
+    D4RNCDE --> D4ANCDE : AnnounceCandidacy
+    D4RNCR --> D4ANCR : AnnounceCandidacy
+    D4ANCDE --> D4RNCDE : RenounceCandidacy
+    D4AC --> D4RC : RenounceCandidacy
+
+    ' transitions out of 4th epoch
+    D4ACR --> DEA : EpochTransition and won election
+    D4ACR --> NDAC : EpochTransition and lost election
+    D4RCR --> DER : EpochTransition and won election
+    D4RCR --> NDRNC : EpochTransition and lost election
+    D4ANCR --> NDAC : EpochTransition
+    D4RNCR --> NDRNC : EpochTransition
+    D4ANCDE --> D1A : EpochTransition
+    D4RNCDE --> D1R : EpochTransition
+
+    
+
+}
+
+
+    NDAC --> DEA : Epoch Transition and won election
+    NDRC --> DER : Epoch Transition and won election
+
+    DEA --> D1A : EpochTransition
+    DER --> D1R : EpochTransition
+    DEA --> DER : RenounceCandidacy
+    DER --> DEA : AnnounceCandidacy
+@enduml

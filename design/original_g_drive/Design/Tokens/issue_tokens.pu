@@ -1,0 +1,97 @@
+@startuml
+
+autonumber
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+actor "Bob\n(Token User)" as tu
+actor "Client\n(Token Issuer/Controller)" as ti
+entity "Primary Delegate" as pd
+collections "Backup Delegates" as bd
+
+ti -> pd : Submit a request to issue a new token: //MyCoin//
+note left
+    Upon approval, this //Issue Token// request
+    will create a new token.
+end note
+
+pd -> pd : Validate request
+
+group Axios Consensus
+    pd -> bd : Send consensus messages
+    bd -> pd : Send consensus messages
+end
+
+pd -> pd : Store new token in database
+bd -> bd : Store new token in database
+
+pd -> ti : Reply with the token id as confirmation
+note left
+    The token id associated with this new token account
+    is created by hashing the token issuer's previous
+    hash, then hasing the issuer's account address, and
+    finally hashing the concatenation of the token symbol
+    and name.
+end note
+
+tu -> ti : Apply to be whitelisted for   //MyCoin//
+note left
+    Whitelisting is initiated when a user submits a request to
+    the appropriate entity. This request is not handled by Logos
+    software. Once this request is approved, a token admin
+    submits a whitelist request on the Logos network, which
+    upon approval will officially whitelist the user's account.
+end note
+
+ti -> ti : Validate Bob's application
+note left
+    The validation of Bob's application is
+    not handled by the software and is done
+    separately for KYC/AML purposes.
+end note
+
+ti -> pd : Send command to Add Bob's account to the whitelist
+
+pd -> pd : Validate command
+
+group Axios Consensus
+    pd -> bd : Send consensus messages
+    bd -> pd : Send consensus messages
+end
+
+pd -> pd : Add Bob's account to //MyCoin's// central\nwhitelist in the token account databse
+bd -> bd : Add Bob's account to //MyCoin's// central\nwhitelist in the token account databse
+
+tu -> ti : Request to receive //MyCoin// tokens
+note left
+    The request to receive //MyCoin// tokens is facillicated
+    by the token issuer and is not routed through Logos
+    software.
+end note
+
+ti -> ti : Accept Bob's request
+
+ti -> pd : Submit //Send Token// request to send //MyCoin//\n\
+tokens to Bob's account.
+
+pd -> pd : Validate request
+
+group Axios Consensus
+    pd -> bd : Send consensus messages
+    bd -> pd : Send consensus messages
+end
+
+pd -> pd : Remove Bob's account from  //MyCoin's// central whitelist,\nadd a\
+ //MyCoin// entry to Bob's personal account, and update\nBob's //MyCoin//\
+ token balance.
+
+bd -> bd : Remove Bob's account from  //MyCoin's// central whitelist,\nadd a\
+ //MyCoin// entry to Bob's personal account, and update\nBob's //MyCoin//\
+ token balance.
+
+note left
+    At this point Bob has an active balance of  //MyCoin//
+    tokens and can initiate transactions with other users.
+end note
+@enduml

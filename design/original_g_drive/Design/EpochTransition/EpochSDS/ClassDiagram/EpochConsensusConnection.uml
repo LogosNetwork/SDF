@@ -1,0 +1,10 @@
+@startuml
+abstract ConsensusConnection
+ConsensusConnection <|-- EpochConsensusConnection
+
+EpochConsensusConnection : ArchiverEpochHandler Epoch_handler
+
+EpochConsensusConnection : Validate()
+EpochConsensusConnection : ApplyUpdates()
+EpochConsensusConnection : IsPrePrepared()
+@enduml

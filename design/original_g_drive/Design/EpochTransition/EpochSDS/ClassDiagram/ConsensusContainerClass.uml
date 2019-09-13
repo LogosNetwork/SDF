@@ -1,0 +1,30 @@
+@startuml
+
+interface InternalConsensus
+InternalConsensus <|-- ConsensusContainer
+
+ConsensusContainer : EpochPeerManager _peer_manager
+ConsensusContainer : EpochManager _cur_epoch
+ConsensusContainer : EpochManager _trans_epoch
+ConsensusContainer : Service _service
+ConsensusContainer : Store _store
+ConsensusContainer : Alarm _alarm
+ConsensusContainer : Archiver _archiver
+ConsensusContainer : NodeIdentityManager _identity_manager
+ConsensusContainer : EpochTransitionDelegate _transition_delegate
+
+ConsensusContainer : OnSendRequest(MicroBlock)
+ConsensusContainer : OnSendRequest(Epoch)
+ConsensusContainer : PeerBinder()
+ConsensusContainer : EpochTransitionEventsStart()
+
+ConsensusContainer : EpochTransitionStart()
+ConsensusContainer : EpochStart()
+ConsensusContainer : EpochTransitionEnd()
+
+ConsensusContainer : OnNewEpochPostCommit()
+ConsensusContainer : OnNewEpochReject()
+ConsensusContainer : CreateEpochManager()
+
+@enduml
+

@@ -1,0 +1,70 @@
+@startuml
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 20
+skinparam maxmessagesize 60
+skinparam sequenceParticipant underline
+
+actor localNode as node
+participant "Archiver" as ar
+participant "EventProposer" as ep
+participant "MicroBlockHandler" as mbh
+participant "EpochBlockHandler" as ebh
+participant "ConsensusContainer" as cc
+participant "MicroBlockConsensusManager" as mbcm
+participant "MicroBlockConsensusConnection" as mbcc
+participant "EpochBlockConsensusManager" as ebcm
+participant "EpochBlockConsensusConnection" as ebcc
+
+node -> ar: Start
+ar -> ep: Start
+
+loop every 10 minutes
+	ep -> mbh : Build
+	mbh -> ep : MicroBlock
+	ep -> cc : OnNewRequest
+	'activate cc
+	cc -> mbcm : OnNewRequest
+	activate mbcm  
+	mbcm -> mbcm : InitiateConsensus
+	mbcm -> mbcc : Send MicroBlock pre-prepare
+	activate mbcc 
+	ref over mbcc, mbcm : consensus session with backup delegates
+	mbcc -> mbcm : OnConsensusMessage
+	...
+	mbcc -> mbcm : OnConsensusMessage
+	mbcm -> mbcm : OnConsensusReached
+	deactivate mbcc	
+	mbcm -> mbcm : ApplyUpdates
+	mbcm -> ar :  CommitToDatabase	
+	deactivate mbcm
+	'deactivate cc
+	
+	alt Not last MicroBlock
+		ar -> mbh : store MicroBlock in DB
+	else
+		ar -> mbh : store MicroBlock in DB
+		ar -> ep : ProposeEpoch
+		
+		ep -> ebh : Build
+		ebh -> ep : EpochBlock
+		ep -> cc : OnNewRequest
+	'activate cc
+		cc -> ebcm : OnNewRequest
+		activate ebcm
+		ebcm -> ebcm : InitiateConsensus
+		ebcm -> ebcc : Send EpochBlock pre-prepare
+		activate ebcc 
+		ref over ebcc, ebcm : consensus session with backup delegates
+		ebcc -> ebcm : OnConsensusMessage
+		...
+		ebcc -> ebcm : OnConsensusMessage
+		ebcm -> ebcm : OnConsensusReached
+		deactivate ebcc
+		ebcm -> ebcm : ApplyUpdates
+		ebcm -> ar :  CommitToDatabase
+		deactivate ebcm
+		ar -> ebh : store EpochBlock in DB
+	end
+end
+@enduml
+

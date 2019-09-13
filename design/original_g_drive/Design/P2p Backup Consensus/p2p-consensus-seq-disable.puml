@@ -1,0 +1,19 @@
+@startuml
+
+activate ConsensusMsgSink
+activate ConsensusManager
+activate ConsensusP2pBridge
+
+[o-> ConsensusMsgSink : Enable p2p by ConsensusManager\nor ConsensusNetIO
+ConsensusMsgSink -> ConsensusManager : Start 60 sec timer
+...
+[o-> ConsensusMsgSink : Message added to the queue\nkeep count of direct and p2p\nmessages
+...
+[o-> ConsensusManager : OnTimeout()
+alt : if reached quorum\nof directly connected delegates
+    ConsensusManager -> ConsensusP2pBridge : Disable p2p
+else
+    ConsensusManager -> ConsensusManager : Start 60 sec timer
+end
+
+@enduml

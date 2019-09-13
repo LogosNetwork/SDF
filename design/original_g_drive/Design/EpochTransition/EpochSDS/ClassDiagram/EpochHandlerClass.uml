@@ -1,0 +1,10 @@
+@startuml
+
+EpochHandler : logos::block_store store
+EpochHandler : EpochVotingManager voting_manager
+
+EpochHandler : Build()
+EpochHandler : Validate()
+EpochHandler : ApplyUpdates()
+
+@enduml

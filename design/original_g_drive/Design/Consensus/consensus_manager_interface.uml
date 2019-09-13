@@ -1,0 +1,16 @@
+# PlantUML Editor
+
+1. select template
+2. write uml diagram
+
+@startuml
+
+class ConsensusManager {
+    +OnSendRequest()
+    +Send()
+    +OnRequestReady()
+    +OnPostCommit()
+    +BindIOChannel()
+}
+
+@enduml

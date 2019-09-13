@@ -1,0 +1,37 @@
+@startuml
+
+activate ConsensusNetIO
+activate ConsensusNetIOManager
+
+loop
+
+ConsensusNetIOManager -> ConsensusNetIOManager : ScheduleInactivityTimer() every 20 seconds
+
+[-> ConsensusNetIO : Consensus message from delegate 0..31
+ConsensusNetIO -> ConsensusNetIO : save timestamp to \n_last_received
+...
+[-> ConsensusNetIO : HeartBeat
+ConsensusNetIO -> ConsensusNetIO : save timestamp to \n_last_received
+group OnHeartBeat()
+alt if HeartBeat is_request
+    ConsensusNetIO ->] : Send HeartBeat with is_request = false
+end
+end
+...
+[-> ConsensusNetIOManager : OnInactivityTimeout()
+loop over each io channel
+    alt if (now()-_last_received) > 80 seconds
+        ConsensusNetIOManager -> ConsensusNetIOManager : OnNetIOError()
+        ConsensusNetIOManager -> ConsensusNetIO: Destroy
+        deactivate ConsensusNetIO
+        ref over ConsensusNetIOManager, ConsensusNetIO
+            reconnect logic
+        end ref
+    else if (now() - _last_received) > 60 seconds
+        ConsensusNetIOManager ->] : Send HeartBeat
+    end
+end
+
+end
+
+@enduml

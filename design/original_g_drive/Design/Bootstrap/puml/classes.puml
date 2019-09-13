@@ -1,0 +1,80 @@
+@startuml
+
+bootstrap_server : receive_buffer
+bootstrap_server : node
+bootstrap_server : requests
+bootstrap_server : mutex
+bootstrap_server : receive()
+bootstrap_server : receive_bulk_pull_action ()
+bootstrap_server : receive_tips_req_action ()
+bootstrap_server : add_request ()
+bootstrap_server : finish_request ()
+bootstrap_server : run_next ()
+
+bootstrap_client : attempt
+bootstrap_client : socket
+bootstrap_client : timeout
+bootstrap_client : endpoint
+bootstrap_client : receive_buffer
+bootstrap_client : start_time
+bootstrap_client : block_count
+bootstrap_client : pending_stop
+bootstrap_client : hard_stop
+bootstrap_client : run ()
+bootstrap_client : start_timeout ()
+bootstrap_client : stop_timeout ()
+bootstrap_client : stop ()
+bootstrap_client : block_rate ()
+bootstrap_client : elapsed_seconds ()
+
+bulk_pull_client : connection
+bulk_pull_client : expected
+bulk_pull_client : end_transmission
+bulk_pull_client : pull
+bulk_pull_client : request()
+bulk_pull_client : request_batch_block()
+bulk_pull_client : receive_block()
+bulk_pull_client : received_type()
+bulk_pull_client : received_block()
+
+bulk_pull_server : send_buffer
+bulk_pull_server : request
+bulk_pull_server : connection
+bulk_pull_server : current
+bulk_pull_server : current_epoch
+bulk_pull_server : current_micro
+bulk_pull_server : current_bsb
+bulk_pull_server : set_current_end()
+bulk_pull_server : get_next()
+bulk_pull_server : send_next()
+bulk_pull_server : sent_action()
+bulk_pull_server : send_finished()
+bulk_pull_server : no_block_sent()
+
+tips_req_client : connection
+tips_req_client : count
+tips_req_client : start_time
+tips_req_client : promise
+tips_req_client : bulk_push_cost
+
+tips_req_client : run ()
+tips_req_client : receive_tips ()
+tips_req_client : receive_tips_header ()
+tips_req_client : received_batch_block_tips ()
+tips_req_client : received_tips ()
+tips_req_client : next ()
+
+tips_req_server : connection;
+tips_req_server : request;
+tips_req_server : send_buffer;
+tips_req_server : count;
+
+tips_req_server : send_next ()
+tips_req_server : sent_action ()
+tips_req_server : send_finished ()
+tips_req_server : no_block_sent ()
+tips_req_server : next ()
+tips_req_server : send_batch_blocks_tips()
+
+@enduml
+

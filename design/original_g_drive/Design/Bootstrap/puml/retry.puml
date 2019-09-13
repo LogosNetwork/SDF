@@ -1,0 +1,11 @@
+@startuml
+
+delete: blacklist
+
+retry->delete: greater than n
+retry->retry: less than n
+
+queue: b1->b2->...->bn
+queue->retry
+
+@enduml

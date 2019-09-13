@@ -1,0 +1,42 @@
+@startuml
+
+autonumber
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+actor "Bob\n(Token User)" as tu
+actor "Fred\n(Token User)" as tu2
+actor "//OpenCoin//\nToken Controller" as tc
+note right of tc
+    //OpenCoin// is a token with whitelisting disabled
+    so there is no barrier to receiving tokens.
+end note
+
+collections "Delegates" as d
+database "//OpenCoin// Freezelist" as fl
+
+note right of fl
+    Freezelist:
+        Foo's Account
+        Bar's Account
+end note
+
+tu -> d : Bob perpetrates malicious activity on the network
+tc -> d : Observe Bob's malicious activity
+
+tc -> d : Add Bob's account to freezelist
+d -> d  : Approve request via consensus
+d -> fl : Add Bob's account to //OpenCoin// freezelist
+note right
+    Freezelist:
+        Foo's Account
+        Bar's Account
+        Bob's Account
+end note
+
+tu2 -> d : Send 10 //OpenCoin// tokens to Bob
+d -> fl : Check //OpenCoin// central freezelist
+d -> tu2 : Reject request as Bob's account is frozen.
+
+@enduml

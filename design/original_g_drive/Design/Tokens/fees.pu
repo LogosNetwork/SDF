@@ -1,0 +1,90 @@
+@startuml
+
+autonumber
+
+skinparam NoteBackgroundColor #85C1E9
+skinparam NoteBorderColor #2C3E50
+
+actor "Bob\n(Token User)" as tu
+actor "Fred\n(Token User)" as f
+actor "Client\n(Token Issuer/Controller)" as ti
+collections "Delegates" as d
+database "Token Account Database" as db
+
+ti -> d : Submit a request to issue a new token: //MyCoin//
+note left
+    Within this request, the token issuer specifies
+    the amount of Logos he or she will pay to cover
+    the token issuance fee. The minimum fee required
+    is considerably larger than that required for
+    other Logos requests. Within this token
+    issuance request, the issuer also specifies fee
+    to be charged against users of the new token. This
+    fee can be specified either as a flat rate
+    or as a percentage of the transaction amount and
+    is applied to each user transaction. The issuer also
+    decides on other settings for the token account in
+    this request.
+end note
+
+d -> d : Validate request
+
+d -> db : Store new token in database
+note right
+    Token Account Database:
+        //MyCoin// Entry:
+            Token Fee Type: Flat Rate
+            Token Fee Value: 10
+            Other Settings...
+end note
+
+d -> d : Split the large Logos fee amongst delegates
+
+d -> ti : Send hash of newly created token account
+
+ti -> d : Send a request to update the token fee to 5 tokens.
+
+note left
+    While the token issuer can establish the token free
+    during token issuance, a controller has the option
+    of changing this fee at any time, provided that this
+    setting is not immutable.
+end note
+
+d -> d : Validate request
+d -> db: Update token fee.
+note right of db
+    Token Account Database:
+        //MyCoin// Entry:
+            Token Fee Type: Flat Rate
+            Token Fee Value: 5
+            Other Settings...
+end note
+
+tu -> d : Submit a request to send 10 tokens to Fred, providing 4 tokens as the fee.
+ note left
+    In transaction requests, users are able to choose
+    how many tokens they wish to contribute to the fee.
+    The chosen amount will be deducted from the source
+    account along with the amount being sent in the
+    transaction. However, if the chosen fee amount doesn't
+    meet the minimum threshold, the request will be rejected.
+ end note
+
+d -> tu : Reject the request as the transaction fee is insufficient.
+
+tu -> d : Re-submit request with fee set to 5 tokens.
+
+d -> d : Validate and execute request.
+
+d -> ti : Deposit 5 tokens into the designated account.
+
+note right
+    One of the settings that token account admins
+    can manipulate is which account will collect the
+    fees charged against token users. In this case, the
+    token issuer designated his own account as the
+    recipient of such deposits.
+end note
+
+@enduml

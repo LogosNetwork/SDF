@@ -1,0 +1,29 @@
+@startuml
+
+interface ArchiverMicroBlockHandler 
+
+ArchiverMicroBlockHandler : Validate(MicroBlock)
+ArchiverMicroBlockHandler : CommitToDatabase(MicroBlock)
+
+interface ArchiverEpochHandler
+ArchiverEpochHandler : Validate(Epoch)
+ArchiverEpochHandler : CommitToDatabase(Epoch)
+
+
+ArchiverMicroBlockHandler <|-- Archiver
+ArchiverEpochHandler <|-- Archiver
+
+Archiver : MicroBlockHandler   micro_block_handler
+Archiver : EpochHandler        epoch_handler
+Archiver : EventProposer       event_proposer
+Archiver : EpochVotingManager  voting_manager
+Archiver : IRecallHandler      recall_handler
+Archiver : logos::block_store  store
+
+Archiver : Start()
+Archiver : Validate(MicroBlock)
+Archiver : CommitToDatabase(MicroBlock)
+Archiver : Validate(Epoch)
+Archiver : CommitToDatabase(Epoch)
+
+@enduml
