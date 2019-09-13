@@ -422,12 +422,6 @@
    <td>
    </td>
   </tr>
-  <tr>
-   <td>Note: Yellow requirements have been moved to epoch requirements
-   </td>
-   <td>
-   </td>
-  </tr>
 </table>
 
 
