@@ -1,4 +1,4 @@
-#TX_Acceptor Requirements
+<h1>TX_Acceptor Requirements</h1>
 
 <table>
   <tr>
