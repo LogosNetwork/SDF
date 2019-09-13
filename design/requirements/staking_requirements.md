@@ -1,4 +1,4 @@
-#Staking Requirements
+<h1>Staking Requirements</h1>
 
 
 <table>
